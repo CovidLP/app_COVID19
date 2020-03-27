@@ -10,104 +10,106 @@ library(shinythemes)
 
 shinyUI(
   
-  # fluidPage(
-  #   titlePanel("Predição de curto e longo prazo para COVID-19")
-  # ),
-  
-  # fluidPage(
-  #   # título
-  #   titlePanel(
-  #     div(column(width = 8, h2("Modelo de Predição de Casos de Coronavírus")),
-  #         column(width = 4, tags$a(href="https://est.ufmg.br",
-  #                                  tags$img(src="logoestatistica.png",
-  #                                           title="DEST/UFMG", width="420", height="80")))
-  #     ), windowTitle = "Predição COVID-19 - DEST/UFMG"
-  #   )
-  # ),
-  
-  navbarPage(
+  fluidPage(
     
-    # ## tema do layout
-    theme = shinytheme("flatly"),
-    
-    ## Nome do app
-    "Previsão de curto e longo prazo para COVID-19", # sigla?
-    
-    
-    header = "Departamento de Estatística - UFMG",
-    # column(width = 4, tags$a(href="https://est.ufmg.br",
-    #                          tags$img(src="logoestatistica.png",
-    #              title="DEST/UFMG", width="420", height="80")))
-    # , windowTitle = "Predição Coronavírus - DEST/UFMG"
-    
-    ## 1a aba
-    tabPanel(
-      "Dados",
-      
-      sidebarLayout(
-        ## painel lateral - input
-        sidebarPanel(
-          selectizeInput("country", label=h5("País"), choices=NULL, width="100%"),
-          selectizeInput("state", label=h5("Estado"), choices=NULL, width="100%"),
-          checkboxGroupInput("metrics", label=h5("Selected Metrics"),
-                             choices=c("Confirmed","Deaths"),#,"Recovered"),
-                             selected=c("Confirmed","Deaths"),#,"Recovered"),
-                             # "metrics", label=h5("Medidas selecionadas"), 
-                             # choices=c("Confirmados", "Mortes", "Recuperados"), 
-                             # selected=c("Confirmados", "Mortes", "Recuperados"), 
-                             width="100%")
-        ),
-        
-        ## painel principal - output (gráficos)
-        mainPanel(
-          plotlyOutput("dailyMetrics"),
-          plotlyOutput("cumulatedMetrics")
-        )
-        
-      )
+    ## título
+    titlePanel(
+      div(column(width = 9, h3("Previsão de curto e longo prazo para COVID-19"),
+                 h5("Short and long term prediction for COVID-19")),
+          column(width = 3, tags$a(href="https://est.ufmg.br",
+                                   tags$img(src="logoestatistica.png",
+                                            title="DEST/UFMG", height="45")))
+                                   #width="420", height="80")))
+          ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
     ),
-         
-    ## 2a aba
-    tabPanel(
-      "Previsão Curto Prazo",
+    
+    fluidRow( ),
+    
+    navbarPage(
       
-      sidebarLayout(
-        ## painel lateral - input
-        sidebarPanel(
-          selectizeInput("country", label=h5("País"), choices=NULL, width="100%"),
-          selectizeInput("state", label=h5("Estado"), choices=NULL, width="100%")
-        ),
-        
-        ## painel principal - output (gráficos)
-        mainPanel(
+      # ## tema do layout
+      theme = shinytheme("flatly"),
+      
+      ## Nome do app
+      # "Previsão de curto e longo prazo para COVID-19", # sigla?
+      " ",
+      
+      ########################################
 
-        )
+      ## 1a aba
+      tabPanel(
+        "Dados/Data",
         
-      )
-    ),
-    
-    ## 3a aba
-    tabPanel(
-      "Previsão Longo Prazo",
-      
-      sidebarLayout(
-        ## painel lateral - input
-        sidebarPanel(
-          selectizeInput("country", label=h5("País"), choices=NULL, width="100%"),
-          selectizeInput("state", label=h5("Estado"), choices=NULL, width="100%")
-        ),
-        
-        ## painel principal - output (gráficos)
-        mainPanel(
+        sidebarLayout(
+          ## painel lateral - input
+          sidebarPanel(
+            selectizeInput("country", label=h5("País/Country"), choices=NULL, width="100%"),
+            selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
+            checkboxGroupInput("metrics", label=h5("Casos/Cases"),
+                               choices=c("Confirmed","Deaths","Recovered"),
+                               selected=c("Confirmed","Deaths","Recovered"),
+                               # "metrics", label=h5("Medidas selecionadas"), 
+                               # choices=c("Confirmados", "Mortes", "Recuperados"), 
+                               # selected=c("Confirmados", "Mortes", "Recuperados"), 
+                               width="100%"),
+            width=3
+          ),
+          
+          ## painel principal - output (gráficos)
+          mainPanel(
+            plotlyOutput("dailyMetrics"),
+            plotlyOutput("cumulatedMetrics")
+          )
           
         )
+      ),
+      
+      ## 2a aba
+      tabPanel(
+        "Previsão Curto Prazo/Short term",
         
+        sidebarLayout(
+          ## painel lateral - input
+          sidebarPanel(
+            selectizeInput("country", label=h5("País/Country"), choices=NULL, width="100%"),
+            selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
+            sliderInput("pred_time",
+                        label="Janela de previsão (em dias)/Prediction window (in days)",
+                        min=1, max=14, value=7 ),
+            width=3
+          ),
+          
+          ## painel principal - output (gráficos)
+          mainPanel(
+            
+          )
+          
+        )
+      ),
+      
+      ## 3a aba
+      tabPanel(
+        "Previsão Longo Prazo/Long Term",
+        
+        sidebarLayout(
+          ## painel lateral - input
+          sidebarPanel(
+            selectizeInput("country", label=h5("País/Country"), choices=NULL, width="100%"),
+            selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
+            width=3
+          ),
+          
+          ## painel principal - output (gráficos)
+          mainPanel(
+            
+          )
+          
+        )
       )
     )
-    
   )
 )
-    
+
                               
                             
 

@@ -44,10 +44,9 @@ loadData = function(fileName, columnName) {
 allData = 
   loadData("time_series_covid19_confirmed_global.csv", "CumConfirmed") %>%
   inner_join(
-    loadData("time_series_covid19_deaths_global.csv", "CumDeaths")) 
-# %>%
-  # inner_join(
-  #   loadData("time_series_covid19_recovered_global.csv","CumRecovered"))
+    loadData("time_series_covid19_deaths_global.csv", "CumDeaths")) %>%
+  inner_join(
+    loadData("time_series_covid19_recovered_global.csv","CumRecovered"))
 
 
 ## REACTIVE SERVER CODE
@@ -72,7 +71,7 @@ server = function(input, output, session) {
         # dateStr = format(date, format="%b %d, %Y"),
         dateStr = format(date, format="%d/%b"),
         NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
-        # NewRecovered=CumRecovered - lag(CumRecovered, default=0),
+        NewRecovered=CumRecovered - lag(CumRecovered, default=0),
         NewDeaths=CumDeaths - lag(CumDeaths, default=0)
       )
   })
@@ -91,7 +90,7 @@ server = function(input, output, session) {
   ## setup the list of countries
   countries = sort(unique(allData$`Country/Region`))
   
-  ## start session with Italy selected
+  ## start session with Brazil selected
   updateSelectInput(session, "country", choices=countries, 
                     selected="Brazil")
   
@@ -129,7 +128,7 @@ server = function(input, output, session) {
           marker=list(
             color=switch(metric,
                          Deaths='rgb(200,30,30)',
-                         # Recovered='rgb(30,200,30)',
+                         Recovered='rgb(30,200,30)',
                          Confirmed='rgb(100,140,240)'),
             # color=switch(metric_pt,
             #              Mortes='rgb(200,30,30)',
