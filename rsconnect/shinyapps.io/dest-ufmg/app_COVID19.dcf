@@ -1,0 +1,12 @@
+name: app_COVID19
+title: app_COVID19
+username:
+account: dest-ufmg
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2008872
+bundleId: 2933370
+url: https://dest-ufmg.shinyapps.io/app_COVID19/
+when: 1585336333.42982
+asMultiple: FALSE
+asStatic: FALSE
