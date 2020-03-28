@@ -7,8 +7,7 @@
 library(dplyr)
 library(tidyr)
 
-## setup data source (Johns Hopkins) 
-baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series"
+##############################################################################
 
 ## define font to be used later
 f1 = list(#family="Courier New, monospace",
@@ -21,7 +20,18 @@ minutesSinceLastUpdate = function(fileName) {
      as.numeric(file.info(fileName)$ctime)) / 60
 }
 
-## main function to load the data
+##############################################################################
+
+## DATA SOURCES
+
+## setup data source (Johns Hopkins)- GLOBAL
+baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series"
+
+## setup data source (IVIS/MSaude/BR)- BRAZIL
+baseURL.BR = "https://raw.githubusercontent.com/belisards/coronabr/master/dados"
+
+
+## main function to load the data - GLOBAL
 loadData = function(fileName, columnName) {
   if(!file.exists(fileName) || 
      minutesSinceLastUpdate(fileName) > 10) {
@@ -49,6 +59,32 @@ allData =
     loadData("time_series_covid19_recovered_global.csv","CumRecovered"))
 
 
+## function to load data - BRAZIL
+loadData.BR = function(fileName) {
+  if(!file.exists(fileName) || 
+     minutesSinceLastUpdate(fileName) > 10) {
+    data = read.csv(file.path(baseURL.BR, fileName), 
+                    check.names=FALSE, stringsAsFactors=FALSE) %>%
+      select(-c(1,3:8,10:11,14)) %>% # remove unwanted columns
+      as_tibble() %>%
+      mutate(date=as.Date(date), # format dates
+             `CumRecovered` = NA
+             ) %>% 
+      rename(`Province/State` = uf, # rename some variables
+             `CumConfirmed` = cases,
+             `CumDeaths` = deaths
+             ) 
+    save(data, file=fileName)  
+  } else {
+    load(file=fileName)
+  }
+  return(data)
+}
+
+brData = loadData.BR("corona_brasil.csv")
+
+##############################################################################
+
 ## REACTIVE SERVER CODE
 
 server = function(input, output, session) {
@@ -56,19 +92,25 @@ server = function(input, output, session) {
   ## load data depending on the country/region selected
   
   data = reactive({
-    d = allData %>%
-      filter(`Country/Region` == input$country)
+    
+    if(input$country == "Brazil"){ # if selected Brazil
+      d = brData %>%
+        arrange(`Province/State`, date)
+    } else{ # otherwise, filter by selected country
+      d = allData %>%
+        filter(`Country/Region` == input$country)
+    }
+    
     if(input$state != "<all>") {
       d = d %>% 
-        filter(`Province/State` == input$state) 
+        filter(`Province/State` == input$state) # filter by selected state
     } else {
       d = d %>% 
         group_by(date) %>% 
-        summarise_if(is.numeric, sum, na.rm=TRUE)
+        summarise_at(c("CumConfirmed","CumDeaths","CumRecovered"), sum)
     }
     d %>%
       mutate(
-        # dateStr = format(date, format="%b %d, %Y"),
         dateStr = format(date, format="%d/%b"),
         NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
         NewRecovered=CumRecovered - lag(CumRecovered, default=0),
@@ -79,12 +121,24 @@ server = function(input, output, session) {
   ## observe if there is any change on the dropdown menu
   
   observeEvent(input$country, {
-    states = allData %>%
-      filter(`Country/Region` == input$country) %>% 
-      pull(`Province/State`)
+    # states = allData %>%
+    #   filter(`Country/Region` == input$country) %>% 
+    #   pull(`Province/State`)
+    # states = c("<all>", sort(unique(states)))
+    # updateSelectInput(session, "state", choices=states, 
+    #                   selected=states[1])
+    if(input$country == "Brazil"){ # if country is Brazil
+      states = brData %>% pull(`Province/State`)
+      # updateCheckboxGroupInput(session, "metrics", label=h5("Casos/Cases"),
+      #                          choices=c("Confirmed","Deaths","Recovered"),
+      #                          selected=c("Confirmed","Deaths","Recovered"))
+    } else{ # if other countries
+      states = allData %>%
+        filter(`Country/Region` == input$country) %>% 
+        pull(`Province/State`)
+    }
     states = c("<all>", sort(unique(states)))
-    updateSelectInput(session, "state", choices=states, 
-                      selected=states[1])
+    updateSelectInput(session, "state", choices=states, selected=states[1])
   })
   
   ## setup the list of countries
@@ -96,11 +150,11 @@ server = function(input, output, session) {
   
   ## graphs
   renderPlot = function(varPrefix, legendPrefix, yaxisTitle) {
-    ## função do pacote 'plotly' para criar o gráfico interativo
+    ## plotly function for interactive plot
     renderPlotly({
       data = data()
       plt = data %>%
-        plot_ly() %>%  # primeiro, cria o gráfico vazio para configurar eixos e legenda
+        plot_ly() %>%  # first, make empty plot and setup axis and legend
         config(displayModeBar=FALSE) %>%
         layout(
           #barmode='group',
@@ -109,10 +163,10 @@ server = function(input, output, session) {
             ticktext=as.list(data$dateStr),
             tickvals=as.list(data$date)),
           yaxis=list(title=yaxisTitle),
-          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)')
-          ,          font=f1
+          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          font=f1
         )
-      # depois, adiciona as linhas de cada uma das medidas fornecidas no input
+      # after, add lines for each metric from input
       metrics_pt = c("Confirmados", "Mortes", "Recuperados")
       for(metric in input$metrics)
       # for(i in 1:length(input$metrics))
