@@ -65,7 +65,7 @@ loadData.BR = function(fileName) {
      minutesSinceLastUpdate(fileName) > 10) {
     data = read.csv(file.path(baseURL.BR, fileName), 
                     check.names=FALSE, stringsAsFactors=FALSE) %>%
-      select(-c(1,3:8,10:11,14)) %>% # remove unwanted columns
+      # select(-c(1,3:8,10:11,14)) %>% # remove unwanted columns
       as_tibble() %>%
       mutate(date=as.Date(date), # format dates
              `CumRecovered` = NA
@@ -147,6 +147,7 @@ server = function(input, output, session) {
   ## start session with Brazil selected
   updateSelectInput(session, "country", choices=countries, 
                     selected="Brazil")
+                    # selected="China")
   
   ## graphs
   renderPlot = function(varPrefix, legendPrefix, yaxisTitle) {
