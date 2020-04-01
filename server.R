@@ -89,10 +89,8 @@ brData = loadData.BR("corona_brasil.csv")
 
 server = function(input, output, session) {
   
-  ## load data depending on the country/region selected
-  
+  ## load data depending on the country/region selected - observed data
   data = reactive({
-    
     if(input$country == "Brazil"){ # if selected Brazil
       d = brData %>%
         arrange(`Province/State`, date)
@@ -100,16 +98,35 @@ server = function(input, output, session) {
       d = allData %>%
         filter(`Country/Region` == input$country)
     }
-    
     if(input$state != "<all>") {
       d = d %>% 
         filter(`Province/State` == input$state) # filter by selected state
-    } else {
+    } else { # otherwise, group by all states
       d = d %>% 
         group_by(date) %>% 
         summarise_at(c("CumConfirmed","CumDeaths","CumRecovered"), sum)
     }
-    d %>%
+    d %>% # create new variables
+      mutate(
+        dateStr = format(date, format="%d/%b"),
+        NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
+        NewRecovered=CumRecovered - lag(CumRecovered, default=0),
+        NewDeaths=CumDeaths - lag(CumDeaths, default=0)
+      )
+  })
+
+  data_pred = reactive({
+    d = allData %>%
+      filter(`Country/Region` == input$country_STpred)
+    if(input$state_STpred != "<all>") {
+      d = d %>% 
+        filter(`Province/State` == input$state_STpred) # filter by selected state
+    } else { # otherwise, group by all states
+      d = d %>% 
+        group_by(date) %>% 
+        summarise_at(c("CumConfirmed","CumDeaths","CumRecovered"), sum)
+    }
+    d %>% # create new variables
       mutate(
         dateStr = format(date, format="%d/%b"),
         NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
@@ -118,15 +135,23 @@ server = function(input, output, session) {
       )
   })
   
-  ## observe if there is any change on the dropdown menu
+  pred_n = reactive({
+    # githubURL <- "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions/Spain_d.rds"
+    # download.file(githubURL,"Spain_d.rds", mode="wb")
+    country_name = input$country_STpred # 'Spain'
+    ## numero de casos
+    pred_n = readRDS(paste0(country_name,'_n.rds'))
+    ## numero de mortes
+    # pred_d = readRDS(paste0(country_name,'_d.rds'))
+    return(pred_n)
+  })
+  
+  
+  
+    
+  ## observe if there is any change on the dropdown menu - show states
   
   observeEvent(input$country, {
-    # states = allData %>%
-    #   filter(`Country/Region` == input$country) %>% 
-    #   pull(`Province/State`)
-    # states = c("<all>", sort(unique(states)))
-    # updateSelectInput(session, "state", choices=states, 
-    #                   selected=states[1])
     if(input$country == "Brazil"){ # if country is Brazil
       states = brData %>% pull(`Province/State`)
       # updateCheckboxGroupInput(session, "metrics", label=h5("Casos/Cases"),
@@ -141,7 +166,7 @@ server = function(input, output, session) {
     updateSelectInput(session, "state", choices=states, selected=states[1])
   })
   
-  ## setup the list of countries
+  ## setup the list of countries - observed data
   countries = sort(unique(allData$`Country/Region`))
   
   ## start session with Brazil selected
@@ -149,8 +174,19 @@ server = function(input, output, session) {
                     selected="Brazil")
                     # selected="China")
   
-  ## graphs
-  renderPlot = function(varPrefix, legendPrefix, yaxisTitle) {
+  
+  ## setup the list of countries - ST prediction
+  countries_pred = c("Spain")
+  updateSelectInput(session, "country_STpred", choices=countries_pred, selected="Spain")
+  updateSelectInput(session, "state_STpred", choices="<all>", selected="<all>")
+  
+
+  
+  #####################################################################
+  ## Graphs
+  
+  ## plot for observed data (confirmed, deaths, recovered)
+  renderPlot_obs = function(varPrefix, legendPrefix, yaxisTitle) {
     ## plotly function for interactive plot
     renderPlotly({
       data = data()
@@ -158,7 +194,6 @@ server = function(input, output, session) {
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         config(displayModeBar=FALSE) %>%
         layout(
-          #barmode='group',
           xaxis=list(
             title="", tickangle=-90, type='category',
             ticktext=as.list(data$dateStr),
@@ -167,40 +202,134 @@ server = function(input, output, session) {
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
-      # after, add lines for each metric from input
-      metrics_pt = c("Confirmados", "Mortes", "Recuperados")
-      for(metric in input$metrics)
-      # for(i in 1:length(input$metrics))
-      #   metric = input$metrics[i]
-        # metric_pt = ifelse(metric=="Confirmed", "Confirmados",
-        #                    ifelse(metric=="Deaths", "Mortes", "Recuperados"))
+      ## after, add lines for each metric from input
+      for(metric in input$metrics){
+        ## portuguese labels for legend
+        metric_pt = switch(metric, Deaths="Mortes/Deaths",
+                           Recovered="Recuperados/Recovered Cases",
+                           Confirmed="Casos Confirmados/Confirmed Cases")
         plt = plt %>%
-        add_trace(
-          x=~date, y=data[[paste0(varPrefix, metric)]],
-          type='scatter', mode='lines+markers', #type='bar',
-          name=paste(legendPrefix, metric, "Cases"),
-          # name=paste("Casos",metric_pt),
-          marker=list(
-            color=switch(metric,
-                         Deaths='rgb(200,30,30)',
-                         Recovered='rgb(30,200,30)',
-                         Confirmed='rgb(100,140,240)'),
-            # color=switch(metric_pt,
-            #              Mortes='rgb(200,30,30)',
-            #              Recuperados='rgb(30,200,30)',
-            #              Confirmados='rgb(100,140,240)'),
-            line=list(color='rgb(8,48,107)', width=1.0)
+          add_trace(
+            x=~date, y=data[[paste0(varPrefix, metric)]],
+            type='scatter', mode='lines+markers', 
+            # name=paste(legendPrefix, metric, "Cases"),
+            # name=paste(legendPrefix, metric_pt, "Cases"),
+            name = metric_pt,
+            marker=list(
+              color=switch(metric,
+                           Deaths='rgb(200,30,30)',
+                           Recovered='rgb(30,200,30)',
+                           Confirmed='rgb(100,140,240)'),
+              line=list(color='rgb(8,48,107)', width=1.0)
+            )
           )
+      }
+      plt
+    })
+  }
+  
+  #########################
+  ## plot for ST prediction
+  renderPlot_STpred = function(varPrefix, legendPrefix, yaxisTitle, pred_time) {
+    ## plotly function for interactive plot
+    renderPlotly({
+      data = data_pred()
+      pred_n = pred_n()
+      ## create last date and format dates for prediction
+      last_date_n = min(pred_n$df_predict$date)-1
+      pred_dateStr = format(pred_n$df_predict$date, format="%d/%b")
+      
+      plt = data %>%
+        plot_ly() %>%  # first, make empty plot and setup axis and legend
+        # config(displayModeBar=FALSE) %>%
+        config(displayModeBar=TRUE) %>%
+        layout(
+          title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y")),
+                       xanchor="left", x=0),
+          xaxis=list(
+            title="",
+            tickangle=-90, type='category',
+            ## add pred dates to the x axis
+            ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
+                               pred_dateStr)),                         # removing 1st 30 days
+            tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
+                               pred_n$df_predict$date)) 
+            ),
+          yaxis=list(title=yaxisTitle),
+          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          font=f1
+        )
+      
+      varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
+      ## portuguese labels for legend
+      metric_pt = switch(metric, Deaths="Mortes/Deaths",
+                         Recovered="Recuperados/Recovered Cases",
+                         Confirmed="Casos Confirmados/Confirmed Cases")
+      
+      plt = plt %>%
+        ## add lines for observed data
+        add_trace(
+          x=data$date[which(data$date<=last_date_n)][-c(1:30)], # removing 1st 30 days
+          y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
+          type='scatter', mode='lines+markers', 
+          # name=paste(legendPrefix, metric, "Cases"),
+          name=metric_pt,
+          marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
+                      line=list(color='rgb(8,48,107)', width=1.0))
+        ) %>% 
+        ## add 2,5% and 97,5% quantiles
+        add_trace(
+          x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
+              pred_n$df_predict[["date"]][1:input$pred_time]),
+          y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
+              pred_n$df_predict[["q25"]][1:input$pred_time]),
+          showlegend=F,
+          type='scatter', #mode = 'none',
+          mode='lines',
+          fillcolor='rgba(150,150,150,0.5)',
+          line=list(color='rgba(0,0,0,1)', width=0) #, dash='dot')
+        ) %>%
+        add_trace(
+          x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
+              pred_n$df_predict[["date"]][1:input$pred_time]),
+          y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
+            pred_n$df_predict[["q975"]][1:input$pred_time]),
+          type='scatter', #mode = 'none',
+          mode='lines',
+          fill='tonexty',
+          # showlegend=F,
+          name=paste("95% IC - ",metric_pt,"CI"),
+          fillcolor='rgba(150,150,150,0.5)',
+          line=list(color='rgba(0,0,0,1)', width=0)# , dash='dot')
+        ) %>%
+        ## add median of prediction
+        add_trace(
+          x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
+              pred_n$df_predict[["date"]][1:input$pred_time]),
+          y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
+              pred_n$df_predict[["med"]][1:input$pred_time]),
+          type='scatter', mode='lines+markers',
+          name=paste("Previsão", metric_pt, "Prediction"),
+          marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
+          # marker=list(color='rgb(30,50,110)'), 
+          # line=list(color='rgb(30,50,110)',width=1.0)
         )
       plt
     })
   }
-  output$dailyMetrics = renderPlot(
-    "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
-    legendPrefix="", yaxisTitle="Novos Casos por Dia")
-  output$cumulatedMetrics = renderPlot(
-    "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
-    legendPrefix="", yaxisTitle="Casos Acumulados")
   
+  ## Observed data graphs
+  output$dailyMetrics = renderPlot_obs(
+    "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
+    legendPrefix="", yaxisTitle="Novos Casos por Dia/New Cases per Day")
+  output$cumulatedMetrics = renderPlot_obs(
+    "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
+    legendPrefix="", yaxisTitle="Casos Acumulados/Cumulated Cases")
+  
+  ## Short Term Prediction graph
+  output$cumMetrics_STpred = renderPlot_STpred(
+    "Cum", legendPrefix = "", yaxisTitle = "Casos Acumulados/Cumulated Cases",
+    input$pred_time
+  )
   
 }
