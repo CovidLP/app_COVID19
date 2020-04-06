@@ -27,9 +27,6 @@ minutesSinceLastUpdate = function(fileName) {
 ## setup data source (Johns Hopkins)- GLOBAL
 baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series"
 
-## setup data source (IVIS/MSaude/BR)- BRAZIL
-baseURL.BR = "https://raw.githubusercontent.com/belisards/coronabr/master/dados"
-
 
 ## main function to load the data - GLOBAL
 loadData = function(fileName, columnName) {
@@ -54,9 +51,16 @@ loadData = function(fileName, columnName) {
 allData = 
   loadData("time_series_covid19_confirmed_global.csv", "CumConfirmed") %>%
   inner_join(
-    loadData("time_series_covid19_deaths_global.csv", "CumDeaths")) %>%
-  inner_join(
-    loadData("time_series_covid19_recovered_global.csv","CumRecovered"))
+    loadData("time_series_covid19_deaths_global.csv", "CumDeaths")) # %>%
+  # inner_join(
+    # loadData("time_series_covid19_recovered_global.csv","CumRecovered"))
+
+##############################################################################
+
+## setup data source (IVIS/MSaude/BR)- BRAZIL
+# baseURL.BR = "https://raw.githubusercontent.com/belisards/coronabr/master/dados"
+# baseURL.BR = "https://covid.saude.gov.br/assets/files/COVID19_"
+baseURL.BR = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
 
 
 ## function to load data - BRAZIL
@@ -66,14 +70,18 @@ loadData.BR = function(fileName) {
     data = read.csv(file.path(baseURL.BR, fileName), 
                     check.names=FALSE, stringsAsFactors=FALSE) %>%
       # select(-c(1,3:8,10:11,14)) %>% # remove unwanted columns
+      select(-c(1,4,6)) %>%
       as_tibble() %>%
-      mutate(date=as.Date(date), # format dates
-             `CumRecovered` = NA
+      mutate(date = as.Date(data)
+        # date=as.Date(date), # format dates
+             # `CumRecovered` = NA
              ) %>% 
-      rename(`Province/State` = uf, # rename some variables
-             `CumConfirmed` = cases,
-             `CumDeaths` = deaths
-             ) 
+      rename(`Province/State` = estado, # rename some variables
+             `CumConfirmed` = casos.acumulados,
+             `CumDeaths` = obitos.acumulados
+             ) %>%
+      select(-2)
+    
     save(data, file=fileName)  
   } else {
     load(file=fileName)
@@ -81,7 +89,25 @@ loadData.BR = function(fileName) {
   return(data)
 }
 
-brData = loadData.BR("corona_brasil.csv")
+# brData = loadData.BR("corona_brasil.csv")
+brData = loadData.BR("EstadosCov19.csv")
+
+
+##############################################################################
+
+## load Short Term prediction results
+
+githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
+countries_STpred = c("Canada",  ## list of countries with available data
+                     "Spain")
+
+## read RDS files from github repository
+for(country in countries_STpred){
+  assign(country,
+         readRDS(url(paste0(githubURL,"/",country,"_n.rds")))
+  )
+}
+
 
 ##############################################################################
 
@@ -104,17 +130,18 @@ server = function(input, output, session) {
     } else { # otherwise, group by all states
       d = d %>% 
         group_by(date) %>% 
-        summarise_at(c("CumConfirmed","CumDeaths","CumRecovered"), sum)
+        summarise_at(c("CumConfirmed","CumDeaths"), sum) #,"CumRecovered"), sum)
     }
     d %>% # create new variables
       mutate(
         dateStr = format(date, format="%d/%b"),
         NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
-        NewRecovered=CumRecovered - lag(CumRecovered, default=0),
+        # NewRecovered=CumRecovered - lag(CumRecovered, default=0),
         NewDeaths=CumDeaths - lag(CumDeaths, default=0)
       )
   })
 
+  ## load data depending on the country/region selected - ST prediction
   data_pred = reactive({
     d = allData %>%
       filter(`Country/Region` == input$country_STpred)
@@ -124,31 +151,27 @@ server = function(input, output, session) {
     } else { # otherwise, group by all states
       d = d %>% 
         group_by(date) %>% 
-        summarise_at(c("CumConfirmed","CumDeaths","CumRecovered"), sum)
+        summarise_at(c("CumConfirmed","CumDeaths"), sum)
+                       # ,"CumRecovered"), sum)
     }
     d %>% # create new variables
       mutate(
         dateStr = format(date, format="%d/%b"),
         NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
-        NewRecovered=CumRecovered - lag(CumRecovered, default=0),
+        # NewRecovered=CumRecovered - lag(CumRecovered, default=0),
         NewDeaths=CumDeaths - lag(CumDeaths, default=0)
       )
   })
   
   pred_n = reactive({
-    # githubURL <- "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions/Spain_d.rds"
-    # download.file(githubURL,"Spain_d.rds", mode="wb")
     country_name = input$country_STpred # 'Spain'
     ## numero de casos
-    pred_n = readRDS(paste0(country_name,'_n.rds'))
-    ## numero de mortes
-    # pred_d = readRDS(paste0(country_name,'_d.rds'))
+    # pred_n = readRDS(paste0(country_name,'_n.rds'))
+    pred_n = get(country_name)
     return(pred_n)
   })
   
   
-  
-    
   ## observe if there is any change on the dropdown menu - show states
   
   observeEvent(input$country, {
@@ -176,8 +199,7 @@ server = function(input, output, session) {
   
   
   ## setup the list of countries - ST prediction
-  countries_pred = c("Spain")
-  updateSelectInput(session, "country_STpred", choices=countries_pred, selected="Spain")
+  updateSelectInput(session, "country_STpred", choices=countries_STpred, selected="Spain")
   updateSelectInput(session, "state_STpred", choices="<all>", selected="<all>")
   
 
@@ -192,13 +214,14 @@ server = function(input, output, session) {
       data = data()
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        config(displayModeBar=FALSE) %>%
+        config(displayModeBar=TRUE) %>%
         layout(
           xaxis=list(
             title="", tickangle=-90, type='category',
             ticktext=as.list(data$dateStr),
             tickvals=as.list(data$date)),
-          yaxis=list(title=yaxisTitle),
+          # yaxis=list(title=yaxisTitle),
+          yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear")),
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
@@ -255,7 +278,8 @@ server = function(input, output, session) {
             tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
                                pred_n$df_predict$date)) 
             ),
-          yaxis=list(title=yaxisTitle),
+          # yaxis=list(title=yaxisTitle),
+          yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear")),
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )

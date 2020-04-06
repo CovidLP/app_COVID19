@@ -47,14 +47,14 @@ shinyUI(
             selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
             checkboxGroupInput("metrics", label=h5("Casos/Cases"),
                                choices=c("Confirmados/Confirmed" = "Confirmed",
-                                         "Mortes/Deaths" = "Deaths",
-                                         "Recuperados/Recovered" = "Recovered"),
-                               selected=c("Confirmed","Deaths","Recovered"),
-                               # choices=c("Confirmed",
-                               #           "Deaths",
-                               #           "Recovered"),
+                                         "Mortes/Deaths" = "Deaths" ), #,
+                                         # "Recuperados/Recovered" = "Recovered"),
+                               selected=c("Confirmed","Deaths"), #,"Recovered"),
+                               # choices=c("Confirmed","Deaths","Recovered"),
                                # selected=c("Confirmed","Deaths","Recovered"),
                                width="100%"),
+            checkboxInput("scale", value=FALSE, width="100%",
+                          label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
           ),
           
@@ -79,6 +79,8 @@ shinyUI(
             sliderInput("pred_time",
                         label="Janela de previsão (em dias)/Prediction window (in days)",
                         min=1, max=14, value=7 ),
+            checkboxInput("scale_STpred", value=FALSE, width="100%",
+                          label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
           ),
           
@@ -110,7 +112,19 @@ shinyUI(
           )
           
         )
+      ),
+      
+      
+      ## 4a aba
+      tabPanel(
+        "Especificação do Modelo/Model Specification",
+        
+          ## painel principal - output (pdf)
+          mainPanel(
+            tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
+                        src="Covid19UFMG.pdf"))
       )
+      
     )
   )
 )
