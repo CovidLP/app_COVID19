@@ -6,7 +6,11 @@ O aplicativo pode ser acessado em: [https://dest-ufmg.shinyapps.io/app_COVID19/]
 
 Este projeto está sendo desenvolvido por um grupo de professores e alunos de pós-graduação do [Departamento de Estatística](http://www.est.ufmg.br) da [Universidade Federal de Minas Gerais](http://www.ufmg.br).
 
+<<<<<<< HEAD
 Para mais projetos relacionados aos dados de COVID-19 desenvolvidos no DEST-UFMG, acesse: [est.ufmg.br/portal/extensao/coronavirus](http://www.est.ufmg.br/portal/extensao/coronavirus).
+=======
+Para mais projetos relacionados aos dados de COVID-19 desenvolvidos no DEST/UFMG, acesse: [est.ufmg.br/portal/extensao/coronavirus](http://www.est.ufmg.br/portal/extensao/coronavirus).
+>>>>>>> 30b67be5b0483de6adf3c2541d6f3fd47e73157d
 
 ---
 
