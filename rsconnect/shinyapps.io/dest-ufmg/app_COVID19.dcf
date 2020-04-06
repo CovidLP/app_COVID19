@@ -5,9 +5,9 @@ account: dest-ufmg
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2008872
-bundleId: 2973362
+bundleId: 2976993
 url: https://dest-ufmg.shinyapps.io/app_COVID19/
-when: 1586136133.43369
+when: 1586196859.18238
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: Canada_d.rds|Canada_n.rds|corona_brasil.csv|README.md|server (1).R|Spain_d.rds|Spain_n.rds|time_series_covid19_confirmed_global.csv|time_series_covid19_deaths_global.csv|time_series_covid19_recovered_global.csv|ui (1).R
+ignoredFiles: EstadosCov19.csv|README.md|time_series_covid19_confirmed_global.csv|time_series_covid19_deaths_global.csv|STpredictions/Canada_d.rds|STpredictions/Canada_n.rds|STpredictions/README.md|STpredictions/Spain_d.rds|STpredictions/Spain_n.rds

@@ -18,8 +18,11 @@ shinyUI(
                  h5("Short and long term prediction for COVID-19")),
           column(width = 3, tags$a(href="https://est.ufmg.br",
                                    tags$img(src="logoestatistica.png",
-                                            title="DEST/UFMG", height="45")))
-                                   #width="420", height="80")))
+                                            title="DEST/UFMG", height="45")),
+                 tags$a(href="https://github.com/thaispaiva/app_COVID19",
+                        h5("Código Fonte/Source Code"))
+                 )
+                                   
           ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
     ),
     
@@ -117,7 +120,7 @@ shinyUI(
       
       ## 4a aba
       tabPanel(
-        "Especificação do Modelo/Model Specification",
+        "Fundamentação Teórica/Theoretical Foundation",
         
           ## painel principal - output (pdf)
           mainPanel(
