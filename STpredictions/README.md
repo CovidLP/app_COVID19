@@ -7,7 +7,7 @@
 O objeto contido neste arquivo, deve ser do tipo "list" com o(s) seguinte(s) elemento(s):
 
 - `df_predict`: objeto data.frame de dimensão (nº dias previsão x 4), com as variáveis:
-  * `date` (datas futuras);
+  * `date` (datas futuras), formato "yyyy-mm-dd";
   * `q25` (quantil 2.5%);
   * `med` (mediana);
   * `q975` (quantil 97.5%).
