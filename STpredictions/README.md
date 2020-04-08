@@ -2,7 +2,7 @@
 
 #### Formato dos arquivos para upload:
 
-**Arquivo**: `<País>_n.rds` contém resultados do modelo para número acumulado de casos. O nome preenchido em <País> deve ser idêntico ao nome do país preenchido no campo "Country/Region" da base de dados.
+**Arquivo**: `<País>_n.rds` contém resultados do modelo para número acumulado de casos. O nome preenchido em <País> deve ser idêntico ao nome do país preenchido no campo "Country/Region" da base de dados. No caso dos resultados para estados do Brasil, o nome do arquivo deve ser `Brazil_<UF>_n.rds`.
 
 O objeto contido neste arquivo, deve ser do tipo "list", contendo o(s) seguinte(s) elemento(s):
 
