@@ -4,7 +4,7 @@
 
 **Arquivo**: `<País>_n.rds` contém resultados do modelo para número acumulado de casos. O nome preenchido em <País> deve ser idêntico ao nome do país preenchido no campo "Country/Region" da base de dados.
 
-O objeto contido neste arquivo, deve ser do tipo "list" com o(s) seguinte(s) elemento(s):
+O objeto contido neste arquivo, deve ser do tipo "list", contendo o(s) seguinte(s) elemento(s):
 
 - `df_predict`: objeto data.frame de dimensão (nº dias previsão x 4), com as variáveis:
   * `date` (datas futuras), formato "yyyy-mm-dd";
