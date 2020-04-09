@@ -81,7 +81,8 @@ shinyUI(
             selectizeInput("state_STpred", label=h5("Estado/State"), choices=NULL, width="100%"),
             sliderInput("pred_time",
                         label="Janela de previsão (em dias)/Prediction window (in days)",
-                        min=1, max=14, value=7 ),
+                        # min=1, max=14, value=7 ),
+                        min=1, max=7, value=7 ),
             checkboxInput("scale_STpred", value=FALSE, width="100%",
                           label="Escala logarítmica/Log-scaled vertical axis"),
             width=3

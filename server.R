@@ -57,7 +57,7 @@ allData =
 
 ##############################################################################
 
-## setup data source (IVIS/MSaude/BR)- BRAZIL
+## setup data source (MSaude/BR)- BRAZIL
 # baseURL.BR = "https://raw.githubusercontent.com/belisards/coronabr/master/dados"
 # baseURL.BR = "https://covid.saude.gov.br/assets/files/COVID19_"
 baseURL.BR = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
@@ -98,14 +98,24 @@ brData = loadData.BR("EstadosCov19.csv")
 ## load Short Term prediction results
 
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
-countries_STpred = c("Canada",  ## list of countries with available data
-                     "Spain")
+## list of countries with available data
+countries_STpred = c("Brazil","Canada",# "Colombia",
+                     "Japan","Spain","US")
+statesBR_STpred = c("CE","DF","RJ")
+
 
 ## read RDS files from github repository
 for(country in countries_STpred){
-  assign(country,
-         readRDS(url(paste0(githubURL,"/",country,"_n.rds")))
-  )
+  if(country == "Brazil"){
+    for(state in statesBR_STpred){
+      assign(paste0(country,"_",state),
+             readRDS(url(paste0(githubURL,"/",country,"_",state,"_n.rds"))))
+             
+    }
+  }else{
+    assign(country,
+           readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
+  }
 }
 
 
@@ -115,6 +125,7 @@ for(country in countries_STpred){
 
 server = function(input, output, session) {
   
+  #########
   ## load data depending on the country/region selected - observed data
   data = reactive({
     if(input$country == "Brazil"){ # if selected Brazil
@@ -140,40 +151,8 @@ server = function(input, output, session) {
         NewDeaths=CumDeaths - lag(CumDeaths, default=0)
       )
   })
-
-  ## load data depending on the country/region selected - ST prediction
-  data_pred = reactive({
-    d = allData %>%
-      filter(`Country/Region` == input$country_STpred)
-    if(input$state_STpred != "<all>") {
-      d = d %>% 
-        filter(`Province/State` == input$state_STpred) # filter by selected state
-    } else { # otherwise, group by all states
-      d = d %>% 
-        group_by(date) %>% 
-        summarise_at(c("CumConfirmed","CumDeaths"), sum)
-                       # ,"CumRecovered"), sum)
-    }
-    d %>% # create new variables
-      mutate(
-        dateStr = format(date, format="%d/%b"),
-        NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
-        # NewRecovered=CumRecovered - lag(CumRecovered, default=0),
-        NewDeaths=CumDeaths - lag(CumDeaths, default=0)
-      )
-  })
   
-  pred_n = reactive({
-    country_name = input$country_STpred # 'Spain'
-    ## numero de casos
-    # pred_n = readRDS(paste0(country_name,'_n.rds'))
-    pred_n = get(country_name)
-    return(pred_n)
-  })
-  
-  
-  ## observe if there is any change on the dropdown menu - show states
-  
+  ## observe if there is any change on the dropdown menu (show states) - observed data
   observeEvent(input$country, {
     if(input$country == "Brazil"){ # if country is Brazil
       states = brData %>% pull(`Province/State`)
@@ -195,12 +174,69 @@ server = function(input, output, session) {
   ## start session with Brazil selected
   updateSelectInput(session, "country", choices=countries, 
                     selected="Brazil")
-                    # selected="China")
   
+  #########
+  ## load (observed) data depending on the country/region selected - ST prediction
+  data_pred = reactive({
+    if(input$country_STpred == "Brazil"){ # if selected Brazil
+      d = brData %>%
+        arrange(`Province/State`, date)
+    } else{ # otherwise, filter by selected country
+      d = allData %>%
+        filter(`Country/Region` == input$country_STpred)
+    }
+    if(input$state_STpred != "<all>") {
+      d = d %>% 
+        filter(`Province/State` == input$state_STpred) # filter by selected state
+    } else { # otherwise, group by all states
+      d = d %>% 
+        group_by(date) %>% 
+        summarise_at(c("CumConfirmed","CumDeaths"), sum) #,"CumRecovered"), sum)
+    }
+    d %>% # create new variables
+      mutate(
+        dateStr = format(date, format="%d/%b"),
+        NewConfirmed=CumConfirmed - lag(CumConfirmed, default=0),
+        # NewRecovered=CumRecovered - lag(CumRecovered, default=0),
+        NewDeaths=CumDeaths - lag(CumDeaths, default=0)
+      )
+  })
+  
+  ## load ST prediction results depending on the country/region selected
+  pred_n = reactive({
+    country_name = input$country_STpred
+    if(country_name=="Brazil"){
+      state = input$state_STpred
+      pred_n = get(paste0(country_name,"_",state))
+    }else{ 
+      pred_n = get(country_name)
+    }
+    ## test dimension and format of object 'pred_n'
+    if(!is.data.frame(pred_n)){
+      pred_n = pred_n$df_predict
+    }
+    ifelse(all.equal(names(pred_n),c("date","q25","med","q975")),
+           "ok", "problem with pred_n dimensions!")
+    pred_n$date = as.Date(pred_n$date)
+    return(pred_n)
+  })
+
+  ## observe if there is any change on the dropdown menu (show states) - STpred
+  observeEvent(input$country_STpred, {
+    if(input$country_STpred == "Brazil"){ # if country is Brazil
+      states = statesBR_STpred
+    } else{ # if other countries
+      states = "<all>"
+    }
+    # states = c("<all>", sort(unique(states)))
+    updateSelectInput(session, "state_STpred", choices=states, selected=states[1])
+  })
   
   ## setup the list of countries - ST prediction
   updateSelectInput(session, "country_STpred", choices=countries_STpred, selected="Spain")
-  updateSelectInput(session, "state_STpred", choices="<all>", selected="<all>")
+  updateSelectInput(session, "state_STpred", 
+                    choices=NULL, selected=NULL)
+                    # choices="<all>", selected="<all>")
   
 
   
@@ -259,8 +295,10 @@ server = function(input, output, session) {
       data = data_pred()
       pred_n = pred_n()
       ## create last date and format dates for prediction
-      last_date_n = min(pred_n$df_predict$date)-1
-      pred_dateStr = format(pred_n$df_predict$date, format="%d/%b")
+      # last_date_n = min(pred_n$df_predict$date)-1
+      # pred_dateStr = format(pred_n$df_predict$date, format="%d/%b")
+      last_date_n = min(pred_n$date)-1
+      pred_dateStr = format(pred_n$date, format="%d/%b")
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
@@ -276,7 +314,8 @@ server = function(input, output, session) {
             ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
                                pred_dateStr)),                         # removing 1st 30 days
             tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
-                               pred_n$df_predict$date)) 
+                               pred_n$date)) 
+                               # pred_n$df_predict$date)) 
             ),
           # yaxis=list(title=yaxisTitle),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear")),
@@ -304,10 +343,13 @@ server = function(input, output, session) {
         ## add 2,5% and 97,5% quantiles
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              pred_n$df_predict[["date"]][1:input$pred_time]),
+              # pred_n$df_predict[["date"]][1:input$pred_time]),
+              pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              pred_n$df_predict[["q25"]][1:input$pred_time]),
+              # pred_n$df_predict[["q25"]][1:input$pred_time]),
+              pred_n$q25[1:input$pred_time]),
           showlegend=F,
+          name=paste("95% IC - ",metric_pt,"CI"),
           type='scatter', #mode = 'none',
           mode='lines',
           fillcolor='rgba(150,150,150,0.5)',
@@ -315,9 +357,11 @@ server = function(input, output, session) {
         ) %>%
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              pred_n$df_predict[["date"]][1:input$pred_time]),
+              # pred_n$df_predict[["date"]][1:input$pred_time]),
+              pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-            pred_n$df_predict[["q975"]][1:input$pred_time]),
+              # pred_n$df_predict[["q975"]][1:input$pred_time]),
+              pred_n$q975[1:input$pred_time]),
           type='scatter', #mode = 'none',
           mode='lines',
           fill='tonexty',
@@ -329,9 +373,11 @@ server = function(input, output, session) {
         ## add median of prediction
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              pred_n$df_predict[["date"]][1:input$pred_time]),
+              # pred_n$df_predict[["date"]][1:input$pred_time]),
+              pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              pred_n$df_predict[["med"]][1:input$pred_time]),
+              # pred_n$df_predict[["med"]][1:input$pred_time]),
+              pred_n$med[1:input$pred_time]),
           type='scatter', mode='lines+markers',
           name=paste("Previsão", metric_pt, "Prediction"),
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
