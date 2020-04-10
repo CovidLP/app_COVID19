@@ -99,7 +99,7 @@ brData = loadData.BR("EstadosCov19.csv")
 
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
 ## list of countries with available data
-countries_STpred = c("Brazil","Canada",# "Colombia",
+countries_STpred = c("Argentina","Brazil","Canada",#"Colombia",
                      "Japan","Spain","US")
 statesBR_STpred = c("CE","DF","RJ")
 
