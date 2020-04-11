@@ -112,13 +112,15 @@ readfiles.repo <- function(){
 
 files = readfiles.repo() # get available results
 aux = sub('\\_n.rds$', '', sub('\\_d.rds$', '', files))
-aux = aux[!unlist(lapply(strsplit(aux,"_"), function(x) any(x %in% "Brazil")))]
 
-countries_STpred = sort(c("Brazil", unique(aux))) # country names without space 
+countries_STpred = sort(unique(  # country names without space 
+  unlist(lapply(strsplit(aux,"_"), function(x) x[1]))))
 countries_STpred_orig = gsub("-"," ", countries_STpred) # country names with space (original)
-# countries_STpred = c("Argentina","Brazil","Canada",#"Colombia",
-#                      "Japan","Spain","US")
-statesBR_STpred = c("CE","DF","RJ")
+
+# list of Brazil's states
+statesBR_STpred = unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil") return(x[2]) ))
+statesBR_STpred[is.na(statesBR_STpred)] = "<all>"
+statesBR_STpred = sort(statesBR_STpred)
 
 
 ## read RDS files from github repository
@@ -127,14 +129,20 @@ for(country in countries_STpred){
   # country = gsub("-"," ",country)
   if(country == "Brazil"){
     for(state in statesBR_STpred){
-      assign(paste0(country,"_",state),
-             readRDS(url(paste0(githubURL,"/",country,"_",state,"_n.rds"))))
+      if(state != "<all>"){
+        assign(paste0(country,"_",state),
+               readRDS(url(paste0(githubURL,"/",country,"_",state,"_ne.rds"))))
+      }else{
+        assign(country,
+               readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
+      }
              
     }
   }else{
     assign(country,
            readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
   }
+  closeAllConnections()
 }
 
 
@@ -227,7 +235,11 @@ server = function(input, output, session) {
     country_name = gsub(" ","-", country_name) # remove space from country name
     if(country_name=="Brazil"){
       state = input$state_STpred
-      pred_n = get(paste0(country_name,"_",state))
+      if(state != "<all>"){
+        pred_n = get(paste0(country_name,"_",state))
+      }else{
+        pred_n = get(country_name)
+      }
     }else{ 
       pred_n = get(country_name)
     }
