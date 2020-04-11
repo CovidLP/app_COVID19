@@ -102,16 +102,20 @@ brData = loadData.BR("EstadosCov19.csv")
 readfiles.repo <- function(){
   req <- GET("https://api.github.com/repos/thaispaiva/app_COVID19/git/trees/master?recursive=1")
   stop_for_status(req)
+  # extract list of files on github
   filelist <- unlist(lapply(content(req)$tree, "[", "path"), use.names = F)
   files <- grep("STpredictions/", filelist, value = TRUE, fixed = TRUE)
-  return(unlist(lapply(strsplit(files,"/"),"[",2)))
+  files <- (unlist(lapply(strsplit(files,"/"),"[",2)))
+  files <- files[-which(files=="README.md")]  # remove readme file
+  return(files)  
 }
 
 files = readfiles.repo() # get available results
-aux = sub('\\_n.rds$', '', sub('\\_d.rds$', '', files[-which(files=="README.md")]))
+aux = sub('\\_n.rds$', '', sub('\\_d.rds$', '', files))
 aux = aux[!unlist(lapply(strsplit(aux,"_"), function(x) any(x %in% "Brazil")))]
 
-countries_STpred = sort(c("Brazil", unique(aux)))
+countries_STpred = sort(c("Brazil", unique(aux))) # country names without space 
+countries_STpred_orig = gsub("-"," ", countries_STpred) # country names with space (original)
 # countries_STpred = c("Argentina","Brazil","Canada",#"Colombia",
 #                      "Japan","Spain","US")
 statesBR_STpred = c("CE","DF","RJ")
@@ -120,6 +124,7 @@ statesBR_STpred = c("CE","DF","RJ")
 ## read RDS files from github repository
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
 for(country in countries_STpred){
+  # country = gsub("-"," ",country)
   if(country == "Brazil"){
     for(state in statesBR_STpred){
       assign(paste0(country,"_",state),
@@ -219,6 +224,7 @@ server = function(input, output, session) {
   ## load ST prediction results depending on the country/region selected
   pred_n = reactive({
     country_name = input$country_STpred
+    country_name = gsub(" ","-", country_name) # remove space from country name
     if(country_name=="Brazil"){
       state = input$state_STpred
       pred_n = get(paste0(country_name,"_",state))
@@ -248,7 +254,7 @@ server = function(input, output, session) {
   
   ## setup the list of countries - ST prediction
   updateSelectInput(session, "country_STpred",
-                    choices=countries_STpred, selected="Spain")
+                    choices=countries_STpred_orig, selected="Spain")
   updateSelectInput(session, "state_STpred", 
                     choices=NULL, selected=NULL)
                     # choices="<all>", selected="<all>")
