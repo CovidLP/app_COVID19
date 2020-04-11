@@ -6,6 +6,7 @@
 ## load packages
 library(dplyr)
 library(tidyr)
+library(httr)
 
 ##############################################################################
 
@@ -97,14 +98,27 @@ brData = loadData.BR("EstadosCov19.csv")
 
 ## load Short Term prediction results
 
-githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
-## list of countries with available data
-countries_STpred = c("Argentina","Brazil","Canada",#"Colombia",
-                     "Japan","Spain","US")
+## function to return list of countries with available data on github
+readfiles.repo <- function(){
+  req <- GET("https://api.github.com/repos/thaispaiva/app_COVID19/git/trees/master?recursive=1")
+  stop_for_status(req)
+  filelist <- unlist(lapply(content(req)$tree, "[", "path"), use.names = F)
+  files <- grep("STpredictions/", filelist, value = TRUE, fixed = TRUE)
+  return(unlist(lapply(strsplit(files,"/"),"[",2)))
+}
+
+files = readfiles.repo() # get available results
+aux = sub('\\_n.rds$', '', sub('\\_d.rds$', '', files[-which(files=="README.md")]))
+aux = aux[!unlist(lapply(strsplit(aux,"_"), function(x) any(x %in% "Brazil")))]
+
+countries_STpred = sort(c("Brazil", unique(aux)))
+# countries_STpred = c("Argentina","Brazil","Canada",#"Colombia",
+#                      "Japan","Spain","US")
 statesBR_STpred = c("CE","DF","RJ")
 
 
 ## read RDS files from github repository
+githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
 for(country in countries_STpred){
   if(country == "Brazil"){
     for(state in statesBR_STpred){
@@ -233,11 +247,12 @@ server = function(input, output, session) {
   })
   
   ## setup the list of countries - ST prediction
-  updateSelectInput(session, "country_STpred", choices=countries_STpred, selected="Spain")
+  updateSelectInput(session, "country_STpred",
+                    choices=countries_STpred, selected="Spain")
   updateSelectInput(session, "state_STpred", 
                     choices=NULL, selected=NULL)
                     # choices="<all>", selected="<all>")
-  
+   
 
   
   #####################################################################
@@ -250,7 +265,7 @@ server = function(input, output, session) {
       data = data()
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        config(displayModeBar=TRUE) %>%
+        plotly::config(displayModeBar=TRUE) %>%
         layout(
           xaxis=list(
             title="", tickangle=-90, type='category',
@@ -258,7 +273,7 @@ server = function(input, output, session) {
             tickvals=as.list(data$date)),
           # yaxis=list(title=yaxisTitle),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear")),
-          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.1,y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       ## after, add lines for each metric from input
@@ -303,7 +318,7 @@ server = function(input, output, session) {
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         # config(displayModeBar=FALSE) %>%
-        config(displayModeBar=TRUE) %>%
+        plotly::config(displayModeBar=TRUE) %>%
         layout(
           title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y")),
                        xanchor="left", x=0),
