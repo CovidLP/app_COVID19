@@ -105,9 +105,9 @@ readfiles.repo <- function(){
   # extract list of files on github
   filelist <- unlist(lapply(content(req)$tree, "[", "path"), use.names = F)
   files <- grep("STpredictions/", filelist, value = TRUE, fixed = TRUE)
-  files <- (unlist(lapply(strsplit(files,"/"),"[",2)))
-  files <- files[-which(files=="README.md")]  # remove readme file
-  return(files)  
+  files <- unlist(lapply(strsplit(files,"/"),"[",2))
+  files <- grep(".rds",files, value=TRUE)
+  return(files)
 }
 
 files = readfiles.repo() # get available results
