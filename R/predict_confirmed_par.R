@@ -27,14 +27,13 @@ covid19 <- covid19_confirm %>%  left_join(covid19_deaths)
 
 #countrylist = "Korea, South"
 countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Venezuela")                    
-
+#register cores
+registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 
 #for(country_name in countrylist){
 obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
    country_name <- countrylist[s]
-   #source jags
-   source("jags_poisson.R")
 
    covid_states <- covid19 %>% filter(country==country_name) %>%
           mutate(confirmed_new = confirmed - lag(confirmed, default=0),
@@ -59,7 +58,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   Y = covid_country
 
   source("jags_poisson.R")
-  model <- "mod_string_dm"
+  model <- "mod_string_dm2"
   i = 2 # (2: confirmed, 3: deaths)
   L = 30
   t = dim(Y)[1]
@@ -108,7 +107,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
          source("mcmcplot_country.R")
          report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
-         mcmcplot_country(mcmcout = mod_chain, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
+         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
                           dir = report_directory,
                           filename = paste0(country_name,'_',colnames(Y)[i],'_diagnostics'),
                           heading = paste0(country_name,'_',colnames(Y)[i]),

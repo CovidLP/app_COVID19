@@ -97,4 +97,31 @@ mod_string_dm <- "model{
 }"
 
 
+###############################################################################
+### M3 (DM)
+###############################################################################
+mod_string_dm2 <- "model{
+
+ #distribuição dos dados y[i]
+ for (i in 1:t){
+   y[i] ~ dpois( mu[i])
+   a[i] = exp(sum(wa[1:i]))
+   b[i] = exp(sum(wb[1:i]))
+   c[i] = exp(sum(wc[1:i]))
+   mu[i] = a[i]*exp(c[i]*i)/(1+b[i]*exp(c[i]*i))
+ }
+ 
+ # prioris para o início da dinâmica
+   wa[1] ~ dnorm(0, 0.1)#dgamma (0.1,0.1)
+   wb[1] ~ dnorm(0, 0.1)#dgamma (0.1,0.1)
+   wc[1] ~ dnorm(0, 0.1)#dgamma (0.1,0.1)
+
+#prioris para as perturbações da evolução
+  for (i in 2:t){
+   wa[i] ~ dnorm(0, Wa )
+   wb[i] ~ dnorm(0, Wb )
+   wc[i] ~ dnorm(0, Wc )
+  }
+
+}"
 

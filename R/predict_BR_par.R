@@ -55,7 +55,7 @@ registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 #obj <- foreach( s = 1:3 ) %dopar% {
   source("jags_poisson.R")
-  model <- "mod_string_dm"
+  model <- "mod_string_dm2"
   i = 2 # (2: confirmed, 3: deaths)
   L = 30
 
@@ -110,7 +110,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     source("mcmcplot_country.R")
     report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
     # report_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/report'
-    mcmcplot_country(mcmcout = mod_chain, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
+    mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
                      dir = report_directory,
                      filename = paste0('Brazil_',file_id,'_diagnostics'),
                      heading = paste0('Brazil_',file_id),

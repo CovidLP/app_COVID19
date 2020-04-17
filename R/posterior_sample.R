@@ -22,7 +22,7 @@ pred <- function(L=100,B,a,b,c,taua,taub,tauc){
   mu[,1] <-  (a.fut[,1]*exp(c.fut[,1]*(B+1))) / (1+b.fut[,1]*exp(c.fut[,1]*(B+1)))
 
   #limit attempt for the rejection procedure
-  limit <- 10
+  limit <- 100
   for(t in 2:(L+1)){
     #counter for how many attempts 
     count <- 1
