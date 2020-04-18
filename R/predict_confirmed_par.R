@@ -67,15 +67,19 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   Wa = 1e5
   Wb = 1e5 # regular pelo Wb: reduzir faz abrir o IC
   Wc = 1e5
-  nc = 2 # 3
-  nb = 50e3 # 5e4
+  nc = 1 # 3
+  nb = 90e3 # 5e4
   thin = 10
-  ni = 5e3 # 5e4
+  ni = 10e3 # 5e4
+
+  inits=list(
+   list(wa = rep(0,t), wb=rep(0,t), wc=rep(0,t)) #chain 1
+  ) #end of inits list
 
   data_jags = list(y=Y[[i]], t=t, Wa=Wa, Wb=Wb, Wc=Wc)
 
   #set.seed(100)
-  mod = jags.model(textConnection(get(model)), data=data_jags, n.chains=nc, n.adapt=nb, quiet=TRUE)
+  mod = jags.model(textConnection(get(model)), data=data_jags, inits = inits, n.chains=nc, n.adapt=nb, quiet=TRUE)
   update(mod, n.iter=ni, progress.bar="none")
   mod_sim = try(coda.samples(model=mod, variable.names=params, n.iter=ni, thin=thin,progress.bar="none"))
 
