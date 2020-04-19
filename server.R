@@ -122,28 +122,28 @@ statesBR_STpred = unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil"
 statesBR_STpred[is.na(statesBR_STpred)] = "<all>"
 statesBR_STpred = sort(statesBR_STpred)
 
-
 ## read RDS files from github repository
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
-for(country in countries_STpred){
-  # country = gsub("-"," ",country)
-  if(country == "Brazil"){
-    for(state in statesBR_STpred){
-      if(state != "<all>"){
-        assign(paste0(country,"_",state),
-               readRDS(url(paste0(githubURL,"/",country,"_",state,"_ne.rds"))))
-      }else{
-        assign(country,
-               readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
-      }
-             
-    }
-  }else{
-    assign(country,
-           readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
-  }
-  closeAllConnections()
-}
+
+# for(country in countries_STpred){
+#   # country = gsub("-"," ",country)
+#   if(country == "Brazil"){
+#     for(state in statesBR_STpred){
+#       if(state != "<all>"){
+#         assign(paste0(country,"_",state),
+#                readRDS(url(paste0(githubURL,"/",country,"_",state,"_ne.rds"))))
+#       }else{
+#         assign(country,
+#                readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
+#       }
+#              
+#     }
+#   }else{
+#     assign(country,
+#            readRDS(url(paste0(githubURL,"/",country,"_n.rds"))))
+#   }
+#   closeAllConnections()
+# }
 
 
 ##############################################################################
@@ -203,7 +203,8 @@ server = function(input, output, session) {
                     selected="Brazil")
   
   #########
-  ## load (observed) data depending on the country/region selected - ST prediction
+  ## ST prediction
+  ## load (observed) data depending on the country/region selected
   data_pred = reactive({
     if(input$country_STpred == "Brazil"){ # if selected Brazil
       d = brData %>%
@@ -228,6 +229,7 @@ server = function(input, output, session) {
         NewDeaths=CumDeaths - lag(CumDeaths, default=0)
       )
   })
+
   
   ## load ST prediction results depending on the country/region selected
   pred_n = reactive({
@@ -236,12 +238,18 @@ server = function(input, output, session) {
     if(country_name=="Brazil"){
       state = input$state_STpred
       if(state != "<all>"){
-        pred_n = get(paste0(country_name,"_",state))
+        # pred_n = get(paste0(country_name,"_",state))
+        pred_n = get0(paste0(country_name,"_",state),
+                      ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_ne.rds"))))
       }else{
-        pred_n = get(country_name)
+        # pred_n = get(country_name)
+        pred_n = get0(country_name,
+                      ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds"))))
       }
     }else{ 
-      pred_n = get(country_name)
+      # pred_n = get(country_name)
+      pred_n = get0(country_name,
+                    ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds"))))
     }
     ## test dimension and format of object 'pred_n'
     if(!is.data.frame(pred_n)){
@@ -266,7 +274,7 @@ server = function(input, output, session) {
   
   ## setup the list of countries - ST prediction
   updateSelectInput(session, "country_STpred",
-                    choices=countries_STpred_orig, selected="Spain")
+                    choices=countries_STpred_orig, selected="Brazil")
   updateSelectInput(session, "state_STpred", 
                     choices=NULL, selected=NULL)
                     # choices="<all>", selected="<all>")
@@ -338,8 +346,10 @@ server = function(input, output, session) {
         # config(displayModeBar=FALSE) %>%
         plotly::config(displayModeBar=TRUE) %>%
         layout(
-          title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y")),
+          title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y"),
+                                   "<br><b>",input$country_STpred," / ",input$state_STpred,"</b>"),
                        xanchor="left", x=0),
+          # annotations = list(x=)
           xaxis=list(
             title="",
             tickangle=-90, type='category',
