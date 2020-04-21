@@ -65,7 +65,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
   params = c("a","b","c")
   Wa = 1e5
-  Wb = 1e5
+  Wb = 1e5 # regular pelo Wb: reduzir faz abrir o IC
   Wc = 1e5
   nc = 1 # 3
   nb = 90e3 # 5e4
@@ -124,7 +124,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
           #minimos de dias no futuro para aceitar que o pico ainda não chegou
           Dat25 <- Dat500 <- Dat975 <- NULL
           days <- 5
-          if(dat.vec[posMax.q25] > days){
+          if(dat.vec[posMax.q25] > max(Y$date)+days){
             Dat25 <- dat.vec[posMax.q25]
             Dat500 <- dat.vec[which.max(mu_n_new[pos[2],])]
             Dat975 <- dat.vec[which.max(mu_n_new[pos[3],])]
