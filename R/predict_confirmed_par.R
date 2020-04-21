@@ -26,7 +26,7 @@ covid19_deaths <- loadData("time_series_covid19_deaths_global.csv", "deaths")
 covid19 <- covid19_confirm %>%  left_join(covid19_deaths)
 
 #countrylist = "Korea, South"
-countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Venezuela")                    
+countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Turkey", "Venezuela")                    
 #register cores
 registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 
@@ -60,7 +60,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   source("jags_poisson.R")
   model <- "mod_string_dm2"
   i = 2 # (2: confirmed, 3: deaths)
-  L = 30
+  L = 150
   t = dim(Y)[1]
 
   params = c("a","b","c")
@@ -73,7 +73,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   ni = 10e3 # 5e4
 
   inits=list(
-   list(wa = rep(0,t), wb=rep(0,t), wc=rep(0,t)) #chain 1
+   list(wa = rep(-2.3,t), wb=rep(-13.82,t), wc=rep(-2.3,t)) #chain 1
   ) #end of inits list
 
   data_jags = list(y=Y[[i]], t=t, Wa=Wa, Wb=Wb, Wc=Wc)
@@ -100,7 +100,51 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                                    m    = colMeans(mod_chain_cumy[,1:L0]))
          row.names(df_predict) <- NULL
 
-         list_out <- list( df_predict = df_predict)
+         {if(country_name %in% c("China","Canada","Japan","India","Italy")){
+          #longterm
+          L0 = 100
+          Wa = 1e25
+          Wb = 1e25 
+          Wc = 1e25
+
+        #faz a predicao de longo termo
+          future <- pred(L=L0, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
+          mu_n_new =  future[[2]]
+          mod_cumMu = rowSums(mu_n_new) + Y[[i]][t]
+
+          u <- sort(mod_cumMu)
+          q <- c(round(nrow(mu_n_new)*.025,0),round(nrow(mu_n_new)*.5,0),round(nrow(mu_n_new)*.975,0))
+          pos <- rep(0,length(q))
+          for(k in 1:length(q)) pos[k] <- which(mod_cumMu == u[k])
+         
+          #vetor de data futuras e pega a posicao do maximo do percentil 25.
+          dat.vec <- as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01")
+          posMax.q25 <- which.max(mu_n_new[pos[1],])
+
+          #minimos de dias no futuro para aceitar que o pico ainda não chegou
+          Dat25 <- Dat500 <- Dat975 <- NULL
+          days <- 5
+          if(dat.vec[posMax.q25] > days){
+            Dat25 <- dat.vec[posMax.q25]
+            Dat500 <- dat.vec[which.max(mu_n_new[pos[2],])]
+            Dat975 <- dat.vec[which.max(mu_n_new[pos[3],])]
+          }
+
+          lt_predict <- data.frame( date = dat.vec,
+                                   q25  = mu_n_new[pos[1],],
+                                   med  = mu_n_new[pos[2],],
+                                   q975 = mu_n_new[pos[3],])
+          row.names(lt_predict) <- NULL
+          lt_summary <- list(NTC25 =mod_cumMu[pos[1]],
+                            NTC500=mod_cumMu[pos[2]],
+                            NTC975=mod_cumMu[pos[3]],
+                            Dat25=Dat25,
+                            Dat500=Dat500,
+                            Dat975=Dat975)
+          list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary)
+         }
+         else list_out <- list( df_predict = df_predict)
+         }
          name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS
