@@ -65,7 +65,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
   params = c("a","b","c")
   Wa = 1e5
-  Wb = 1e5 # regular pelo Wb: reduzir faz abrir o IC
+  Wb = 1e5
   Wc = 1e5
   nc = 1 # 3
   nb = 90e3 # 5e4
