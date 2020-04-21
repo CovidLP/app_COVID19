@@ -14,13 +14,16 @@ shinyUI(
     
     ## título
     titlePanel(
-      div(column(width = 9, h3("Previsão de curto e longo prazo para COVID-19"),
-                 h5("Short and long term prediction for COVID-19")),
+      div(column(width = 9, h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
+                 h4("Short and long term prediction for COVID-19")),
           column(width = 3, tags$a(href="https://est.ufmg.br",
                                    tags$img(src="logoestatistica.png",
                                             title="DEST/UFMG", height="45")),
                  tags$a(href="https://github.com/thaispaiva/app_COVID19",
-                        h5("Código Fonte/Source Code"))
+                        div(h5("Código Fonte/Source Code"))),
+                            # tags$img(src="www/GitHub-Mark-32px.png",
+                            #          title="GitHub", height="5"))), 
+                 style = "transform: translate(0%, 22%);"
                  )
                                    
           ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
@@ -41,7 +44,7 @@ shinyUI(
 
       ## 1a aba
       tabPanel(
-        "Dados/Data",
+        title = HTML("<b>Dados</b>/<br>Data"),
         
         sidebarLayout(
           ## painel lateral - input
@@ -72,7 +75,7 @@ shinyUI(
       
       ## 2a aba
       tabPanel(
-        "Previsão Curto Prazo/Short term Prediction",
+        title = HTML("<b>Previsão Curto Prazo</b>/<br>Short term Prediction"),
         
         sidebarLayout(
           ## painel lateral - input
@@ -90,9 +93,10 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
-            h5("Em desenvolvimento/Under development"),
-            h5("\n"),
-            plotlyOutput("cumMetrics_STpred")  # gráfico previsão curto prazo
+            # h5("Em desenvolvimento/Under development"),
+            # h5("\n"),
+            uiOutput("plotTitle"),
+            plotlyOutput("STpred")  # gráfico previsão curto prazo
           )
           
         )
@@ -100,19 +104,24 @@ shinyUI(
       
       ## 3a aba
       tabPanel(
-        "Previsão Longo Prazo/Long Term Prediction",
+        title = HTML("<b>Previsão Longo Prazo</b>/<br>Long Term Prediction"),
         
         sidebarLayout(
           ## painel lateral - input
           sidebarPanel(
-            selectizeInput("country", label=h5("País/Country"), choices=NULL, width="100%"),
-            selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
+            selectizeInput("country_LTpred", label=h5("País/Country"), choices=NULL, width="100%"),
+            selectizeInput("state_LTpred", label=h5("Estado/State"), choices=NULL, width="100%"),
+            checkboxInput("scale_LTpred", value=FALSE, width="100%",
+                          label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
           ),
           
           ## painel principal - output (gráficos)
           mainPanel(
-            h5("Em desenvolvimento/Under development")
+            # h5("Em desenvolvimento/Under development"),
+            # h5("\n"),
+            uiOutput("plotTitle_LT"),
+            plotlyOutput("LTpred")  # gráfico previsão curto prazo
           )
           
         )
@@ -121,7 +130,7 @@ shinyUI(
       
       ## 4a aba
       tabPanel(
-        "Fundamentação Teórica/Theoretical Foundation",
+        title = HTML("<b>Fundamentação Teórica</b>/<br>Theoretical Foundation"),
         
           ## painel principal - output (pdf)
           mainPanel(
