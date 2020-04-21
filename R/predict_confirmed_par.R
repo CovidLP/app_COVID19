@@ -100,7 +100,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                                    m    = colMeans(mod_chain_cumy[,1:L0]))
          row.names(df_predict) <- NULL
 
-         {if(country_name %in% c("China","Canada","Japan","India","Italy")){
+         {if(country_name %in% c("China","Canada","Japan","India")){
           #longterm
           L0 = 100
           Wa = 1e25
