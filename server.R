@@ -117,12 +117,16 @@ countries_STpred = sort(unique(  # country names without space
   unlist(lapply(strsplit(aux,"_"), function(x) x[1]))))
 countries_STpred_orig = gsub("-"," ", countries_STpred) # country names with space (original)
 
+
 ## list of countries for LONG TERM prediction
-countries_LTpred_orig = c("Brazil","Canada","China",
-                          "India","Italy","Japan")
+countries_LTpred_orig = c(#"Brazil",
+                          "Canada","China",
+                          "India",#"Italy",
+                          "Japan")
 statesBR_LTpred = c("<all>")
 
-# list of Brazil's states
+
+## list of Brazil's states
 statesBR_STpred = unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil") return(x[2]) ))
 statesBR_STpred[is.na(statesBR_STpred)] = "<all>"
 statesBR_STpred = sort(statesBR_STpred)
@@ -133,6 +137,7 @@ githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
 
 ##############################################################################
 
+#########################
 ## REACTIVE SERVER CODE
 
 server = function(input, output, session) {
@@ -181,7 +186,7 @@ server = function(input, output, session) {
     updateSelectInput(session, "state", choices=states, selected=states[1])
   })
   
-  ## setup the list of countries - observed data
+  ## setup the list of countries - OBSERVED DATA
   countries = sort(unique(allData$`Country/Region`))
   
   ## start session with Brazil selected
@@ -231,10 +236,6 @@ server = function(input, output, session) {
           pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_ne.rds")))
           assign(paste0(country_name,"_",state), pred_n)  # create country_name object
         }
-        # pred_n = get(paste0(country_name,"_",state))
-        # pred_n = get0(paste0(country_name,"_",state),
-                      # ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_ne.rds"))))
-        # assign(paste0(country_name,"_",state), pred_n)  # create country_name object
       }else{
         if(exists(country_name)){
           pred_n = get(country_name)
@@ -242,10 +243,6 @@ server = function(input, output, session) {
           pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
           assign(country_name, pred_n)  # create country_name object
         }
-        # pred_n = get(country_name)
-        # pred_n = get0(country_name,
-        #               ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds"))))
-        # assign(country_name, pred_n)  # create country_name object
       }
     }else{
       if(exists(country_name)){
@@ -254,10 +251,6 @@ server = function(input, output, session) {
         pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
         assign(country_name, pred_n)  # create country_name object
       }
-      # pred_n = get(country_name)
-      # pred_n = get0(country_name,
-      #               ifnotfound = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds"))))
-      # assign(country_name, pred_n)  # create country_name object
     }
     
     ## select only object 'df_predict' from the list
@@ -362,14 +355,13 @@ server = function(input, output, session) {
     updateSelectInput(session, "state_LTpred", choices=states, selected=states[1])
   })
   
-  ## setup the list of countries - ST prediction
+  ## setup the list of countries - LT prediction
   updateSelectInput(session, "country_LTpred",
                     choices=countries_LTpred_orig, #selected="Brazil")
                     selected="Japan")
   updateSelectInput(session, "state_LTpred", 
                     choices=NULL, selected=NULL)
-  # choices="<all>", selected="<all>")
-  
+
   
   #####################################################################
   ## GRAPHS
@@ -389,9 +381,8 @@ server = function(input, output, session) {
             title="", tickangle=-90, type='category',
             ticktext=as.list(data$dateStr),
             tickvals=as.list(data$date)),
-          # yaxis=list(title=yaxisTitle),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear"),
-                     hoverformat='.0f'),
+                     hoverformat='.0f', hoverinfo="x+y"),
           legend=list(x=0.1,y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
@@ -404,9 +395,7 @@ server = function(input, output, session) {
         plt = plt %>%
           add_trace(
             x=~date, y=data[[paste0(varPrefix, metric)]],
-            type='scatter', mode='lines+markers', 
-            # name=paste(legendPrefix, metric, "Cases"),
-            # name=paste(legendPrefix, metric_pt, "Cases"),
+            type='scatter', mode='lines+markers', hoverinfo="x+y",
             name = metric_pt,
             marker=list(
               color=switch(metric,
@@ -420,6 +409,22 @@ server = function(input, output, session) {
       plt
     })
   }
+  
+  ## add title bar with country name - New Cases
+  output$plotTitle_daily <- renderUI({
+    title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+    div(style='text-align:center; font-size:15px; 
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+        "Novos Casos/New Cases - ",title)
+  })
+  
+  ## add title bar with country name - Cumulated Cases
+  output$plotTitle_cum <- renderUI({
+    title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+    div(style= 'text-align:center; font-size:15px;
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+        "Casos Acumulados/Cumulated Cases - ",title)
+  })
   
   #########################
   ## plot for ST prediction
@@ -438,25 +443,24 @@ server = function(input, output, session) {
         plotly::config(displayModeBar=TRUE) %>%
         layout(
           ## title of ST pred graph
-          title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y"),
-                                   "<br>Em desenvolvimento/Under development"),
-                       xanchor="left", x=0),
+          title = list(
+            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
+                        "<br>Em desenvolvimento/Under development"),
+            xanchor="left", x=0),
           xaxis=list(title="", tickangle=-90, type='category',
             ## add pred dates to the x axis
             ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
                                pred_dateStr)),                         # removing 1st 30 days
             tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
                                pred_n$date)) 
-                               # pred_n$df_predict$date)) 
             ),
-          # yaxis=list(title=yaxisTitle),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear"),
-                     hoverformat='.0f'),
+                     hoverformat='.0f', hoverinfo="x+y"), 
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       
-      varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
+      # varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
@@ -467,8 +471,7 @@ server = function(input, output, session) {
         add_trace(
           x=data$date[which(data$date<=last_date_n)][-c(1:30)], # removing 1st 30 days
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
-          type='scatter', mode='lines+markers', 
-          # name=paste(legendPrefix, metric, "Cases"),
+          type='scatter', mode='lines+markers', hoverinfo="x+y", 
           name=metric_pt,
           marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
                       line=list(color='rgb(8,48,107)', width=1.0))
@@ -476,27 +479,23 @@ server = function(input, output, session) {
         ## add 2,5% and 97,5% quantiles
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              # pred_n$df_predict[["date"]][1:input$pred_time]),
               pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              # pred_n$df_predict[["q25"]][1:input$pred_time]),
               pred_n$q25[1:input$pred_time]),
           showlegend=F,
           name=paste("95% IC - ",metric_pt,"CI"),
           type='scatter', #mode = 'none',
-          mode='lines',
+          mode='lines', hoverinfo="x+y", 
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0) #, dash='dot')
         ) %>%
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              # pred_n$df_predict[["date"]][1:input$pred_time]),
               pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              # pred_n$df_predict[["q975"]][1:input$pred_time]),
               pred_n$q975[1:input$pred_time]),
           type='scatter', #mode = 'none',
-          mode='lines',
+          mode='lines', hoverinfo="x+y", 
           fill='tonexty',
           # showlegend=F,
           name=paste("95% IC - ",metric_pt,"CI"),
@@ -506,25 +505,24 @@ server = function(input, output, session) {
         ## add median of prediction
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              # pred_n$df_predict[["date"]][1:input$pred_time]),
-              pred_n$date[1:input$pred_time]),
+               pred_n$date[1:input$pred_time]),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              # pred_n$df_predict[["med"]][1:input$pred_time]),
               pred_n$med[1:input$pred_time]),
-          type='scatter', mode='lines+markers',
+          type='scatter', mode='lines+markers', hoverinfo="x+y", 
           name=paste("Previsão", metric_pt, "Prediction"),
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
-          # marker=list(color='rgb(30,50,110)'), 
-          # line=list(color='rgb(30,50,110)',width=1.0)
         )
       plt
     })
   }
   
+  ## add title bar with country name - ST prediction
   output$plotTitle <- renderUI({
-    div(style= #'background-color:green; color:white; 
-        'text-align:center; font-size:15px; font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        input$country_STpred,"/",input$state_STpred)
+    title = paste0(input$country_STpred,
+                   ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
+    div(style='text-align:center; font-size:15px;
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+        title)
   })
   
   #########################
@@ -541,29 +539,30 @@ server = function(input, output, session) {
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         # config(displayModeBar=FALSE) %>%
-        plotly::config(displayModeBar=TRUE) %>%
+        plotly::config(displayModeBar=TRUE, locale='pt-br') %>%
         layout(
-          title = list(text=paste0("atualizado em ",format(last_date_n, format="%d/%m/%Y"),
-                                   "<br>Em desenvolvimento/Under development"),
-                       xanchor="left", x=0),
-          # annotations = list(x=)
+          title = list(
+            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
+                        "<br>Em desenvolvimento/Under development"),
+            xanchor="left", x=0),
           xaxis=list(
             title="",
-            tickangle=-90, type='category',
+            tickangle=-90, #type='category',
             ## add pred dates to the x axis
-            ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
-                               pred_dateStr)),                         # removing 1st 30 days
-            tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
-                               pred_n$date)) 
+            # ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
+                               # pred_dateStr)),                         # removing 1st 30 days
+            # tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
+                               # pred_n$date)),
+            tick0=data$dateStr[31],dtick=7*86400000, # add ticks every week
+            tickformat="%d/%b"
           ),
-          # yaxis=list(title=yaxisTitle),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
-                     hoverformat='.0f'),
+                     hoverformat='.0f', hoverinfo="x+y"),
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       
-      varPrefix = "New"; metric = "Confirmed"; legendPrefix = ""
+      # varPrefix = "New"; metric = "Confirmed"; legendPrefix = ""
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
@@ -574,7 +573,7 @@ server = function(input, output, session) {
         add_trace(
           x=data$date[which(data$date<=last_date_n)][-c(1:30)], # removing 1st 30 days
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
-          type='scatter', mode='lines+markers', 
+          type='scatter', mode='lines+markers', hoverinfo="x+y",
           name=metric_pt,
           marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
                       line=list(color='rgb(8,48,107)', width=1.0))
@@ -582,15 +581,13 @@ server = function(input, output, session) {
         ## add 2,5% and 97,5% quantiles
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              # pred_n$date[1:input$pred_time]),
               pred_n$date),
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              # pred_n$q25[1:input$pred_time]),
               pred_n$q25),
           showlegend=F,
           name=paste("95% IC - ",metric_pt,"CI"),
           type='scatter', #mode = 'none',
-          mode='lines',
+          mode='lines', hoverinfo="x+y",
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0) #, dash='dot')
         ) %>%
@@ -602,7 +599,7 @@ server = function(input, output, session) {
               # pred_n$q975[1:input$pred_time]),
               pred_n$q975),
           type='scatter', #mode = 'none',
-          mode='lines',
+          mode='lines', hoverinfo="x+y",
           fill='tonexty',
           # showlegend=F,
           name=paste("95% IC - ",metric_pt,"CI"),
@@ -617,7 +614,7 @@ server = function(input, output, session) {
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               # pred_n$med[1:input$pred_time]),
               pred_n$med),
-          type='scatter', mode='lines+markers',
+          type='scatter', mode='lines+markers', hoverinfo="x+y",
           name=paste("Previsão", metric_pt, "Prediction"),
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
         )
@@ -625,10 +622,13 @@ server = function(input, output, session) {
     })
   }
   
+  ## add title bar with country name - LT prediction
   output$plotTitle_LT <- renderUI({
-    div(style= #'background-color:green; color:white; 
-          'text-align:center; font-size:15px; font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        input$country_LTpred,"/",input$state_LTpred)
+    title = paste0(input$country_LTpred,
+                   ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
+    div(style= 'text-align:center; font-size:15px;
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+        title)
   })
   
   ###################################################################

@@ -5,6 +5,7 @@
 library(shiny)
 library(plotly)
 library(shinythemes)
+library(shinycssloaders)
 
 ## Código da Interface
 
@@ -66,8 +67,12 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
-            plotlyOutput("dailyMetrics"),
-            plotlyOutput("cumulatedMetrics")
+            uiOutput("plotTitle_daily"),
+            withSpinner( # add spinner while loading
+              plotlyOutput("dailyMetrics")),
+            uiOutput("plotTitle_cum"),
+            withSpinner(
+              plotlyOutput("cumulatedMetrics"))
           )
           
         )
@@ -96,7 +101,8 @@ shinyUI(
             # h5("Em desenvolvimento/Under development"),
             # h5("\n"),
             uiOutput("plotTitle"),
-            plotlyOutput("STpred")  # gráfico previsão curto prazo
+            withSpinner( # add spinner while loading
+              plotlyOutput("STpred"))  # gráfico previsão curto prazo
           )
           
         )
@@ -121,7 +127,8 @@ shinyUI(
             # h5("Em desenvolvimento/Under development"),
             # h5("\n"),
             uiOutput("plotTitle_LT"),
-            plotlyOutput("LTpred")  # gráfico previsão curto prazo
+            withSpinner( # add spinner while loading
+              plotlyOutput("LTpred"))  # gráfico previsão curto prazo
           )
           
         )
