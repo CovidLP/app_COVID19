@@ -113,23 +113,27 @@ readfiles.repo <- function(){
 files = readfiles.repo() # get available results
 aux = sub('\\_n.rds$', '', sub('\\_d.rds$', '', files))
 
+##############################################
+## list of countries for SHORT TERM prediction
 countries_STpred = sort(unique(  # country names without space 
   unlist(lapply(strsplit(aux,"_"), function(x) x[1]))))
 countries_STpred_orig = gsub("-"," ", countries_STpred) # country names with space (original)
-
-
-## list of countries for LONG TERM prediction
-countries_LTpred_orig = c(#"Brazil",
-                          "Canada","China",
-                          "India",#"Italy",
-                          "Japan")
-statesBR_LTpred = c("<all>")
-
 
 ## list of Brazil's states
 statesBR_STpred = unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil") return(x[2]) ))
 statesBR_STpred[is.na(statesBR_STpred)] = "<all>"
 statesBR_STpred = sort(statesBR_STpred)
+
+#############################################
+## list of countries for LONG TERM prediction
+countries_LTpred_orig = c("Brazil",
+  "Canada","China",
+  "India",#"Italy",
+  "Japan")
+statesBR_LTpred = c("<all>")
+# countries_LTpred_orig = countries_STpred_orig
+# statesBR_LTpred = statesBR_STpred
+
 
 ## read RDS files from github repository
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
@@ -338,9 +342,13 @@ server = function(input, output, session) {
       }
     }
     
-    ## select only object 'lt_predict' from the list
-    pred_n = pred_n$lt_predict
-    pred_n$date = as.Date(pred_n$date)  # format date
+    # ## select only object 'lt_predict' from the list
+    # pred_n = pred_n$lt_predict
+    # pred_n$date = as.Date(pred_n$date)  # format date
+    # return(pred_n)
+    
+    pred_n$lt_predict$date = as.Date(pred_n$lt_predict$date)
+    pred_n$df_predict = NULL  # remove df_predict object
     return(pred_n)
   })
   
@@ -377,15 +385,20 @@ server = function(input, output, session) {
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         plotly::config(displayModeBar=TRUE) %>%
         layout(
+          ## add pred dates to the x axis
           xaxis=list(
-            title="", tickangle=-90, type='category',
-            ticktext=as.list(data$dateStr),
-            tickvals=as.list(data$date)),
+            title="", tickangle=-90, #type='category',
+            # ticktext=as.list(data$dateStr),
+            # tickvals=as.list(data$date)),
+            tick0=data$dateStr[1],dtick=7*86400000, # add ticks every week
+            tickformat="%d/%b"
+          ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
           legend=list(x=0.1,y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
+      
       ## after, add lines for each metric from input
       for(metric in input$metrics){
         ## portuguese labels for legend
@@ -446,21 +459,25 @@ server = function(input, output, session) {
           title = list(
             text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
                         "<br>Em desenvolvimento/Under development"),
-            xanchor="left", x=0),
-          xaxis=list(title="", tickangle=-90, type='category',
+            xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+          xaxis=list(
+            title="",
+            tickangle=-90, #type='category',
             ## add pred dates to the x axis
-            ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
-                               pred_dateStr)),                         # removing 1st 30 days
-            tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
-                               pred_n$date)) 
-            ),
+            # ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
+            # pred_dateStr)),                         # removing 1st 30 days
+            # tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
+            # pred_n$date)),
+            tick0=data$dateStr[31],dtick=7*86400000, # add ticks every week
+            tickformat="%d/%b"
+          ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"), 
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       
-      # varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
+      varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
@@ -531,10 +548,16 @@ server = function(input, output, session) {
     ## plotly function for interactive plot
     renderPlotly({
       data = data_predLT()
-      pred_n = predLT_n()
+      # pred_n = predLT_n()
+      aux = predLT_n()
+      pred_n = aux$lt_predict
+      pred_summary = aux$lt_summary
+
       ## create last date and format dates for prediction
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
+      
+      varPrefix = "New"; metric = "Confirmed"; legendPrefix = ""
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
@@ -544,7 +567,21 @@ server = function(input, output, session) {
           title = list(
             text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
                         "<br>Em desenvolvimento/Under development"),
-            xanchor="left", x=0),
+            xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+          annotations = list(text = paste0(ifelse(is.null(pred_summary$Dat500),"",
+                                                  paste0("<b>Pico estimado/Estimated peak 95% IC:</b> (",
+                                                         format(pred_summary$Dat25,form="%d/%b"),
+                                                         ", ",
+                                                         format(pred_summary$Dat975,form="%d/%b"),
+                                                         ")<br>")),
+                                           "<b>Número total de Casos/Total Number of Cases:</b> ",
+                                           round(pred_summary$NTC500,0),"<br><b>95% IC:</b> (",
+                                           round(pred_summary$NTC25,0),
+                                           ", ", round(pred_summary$NTC975,0),")"),
+                             x=max(pred_n$date),
+                             y=0.95*max(unlist(data[[paste0(varPrefix, metric)]],pred_n[,-1])),
+                             font=list(family="Arial",size=10), align="right",
+                             showarrow=FALSE),
           xaxis=list(
             title="",
             tickangle=-90, #type='category',
@@ -553,16 +590,15 @@ server = function(input, output, session) {
                                # pred_dateStr)),                         # removing 1st 30 days
             # tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
                                # pred_n$date)),
-            tick0=data$dateStr[31],dtick=7*86400000, # add ticks every week
+            tick0=data$dateStr[1],dtick=7*86400000, # add ticks every week
             tickformat="%d/%b"
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
-          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.05, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       
-      # varPrefix = "New"; metric = "Confirmed"; legendPrefix = ""
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
@@ -571,8 +607,8 @@ server = function(input, output, session) {
       plt = plt %>%
         ## add lines for observed data
         add_trace(
-          x=data$date[which(data$date<=last_date_n)][-c(1:30)], # removing 1st 30 days
-          y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
+          x=data$date[which(data$date<=last_date_n)],#[-c(1:30)], # removing 1st 30 days
+          y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)],#[-c(1:30)], 
           type='scatter', mode='lines+markers', hoverinfo="x+y",
           name=metric_pt,
           marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
