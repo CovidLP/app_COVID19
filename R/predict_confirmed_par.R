@@ -58,41 +58,67 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   Y = covid_country
 
   source("jags_poisson.R")
-  model <- "mod_string_dm2"
+
   i = 2 # (2: confirmed, 3: deaths)
-  L = 150
+  #L = 150
+  #t0 = Sys.time()
+  
+  Y = covid19 %>% filter(state==uf$state[s])
   t = dim(Y)[1]
 
+  #use static to provide initial values
   params = c("a","b","c")
-  Wa = 1e5
-  Wb = 1e5 # regular pelo Wb: reduzir faz abrir o IC
-  Wc = 1e5
+  Wa = 1e4
+  Wb = 1e4 
+  Wc = 1e4
+  nc = 1 # 3
+  nb = 20e3 # 5e4
+  thin = 1
+  ni = 1e3 # 5e4
+  data_jags = list(y=Y[[i]], t=t)
+  mod = jags.model(textConnection(mod_string), data=data_jags, n.chains=nc, n.adapt=nb, quiet=TRUE)
+  update(mod, n.iter=ni, progress.bar="none")
+  mod_sim = coda.samples(model=mod, variable.names=params, n.iter=ni, thin=thin,progress.bar="none")
+  mod_chain = as.data.frame(do.call(rbind, mod_sim))
+
+  a.init <- median(mod_chain[["a"]])
+  b.init <- median(mod_chain[["b"]])
+  c.init <- median(mod_chain[["c"]])
+
+  model <- "mod_string_dm3"
+
+  params = c("a","b","c","Wa","Wc")
+  Wa = 1e4
+  Wb = 1e4 
+  Wc = 1e4
   nc = 1 # 3
   nb = 90e3 # 5e4
   thin = 10
   ni = 10e3 # 5e4
+  #data_jags = list(y=Y[[i]], t=t, Wa=Wa, Wb=Wb, Wc=Wc)
+  data_jags = list(y=Y[[i]], t=t)
 
   inits=list(
-   list(wa = rep(-2.3,t), wb=rep(-13.82,t), wc=rep(-2.3,t)) #chain 1
+   #list(wa = rep(-2.3,t), wb=rep(-13.82,t), wc=rep(-2.3,t)) #chain 1
+   list(wa = c(log(a.init),rep(0,t-1)), b=b.init, wc=c(log(c.init),rep(0,t-1))) #chain 1
   ) #end of inits list
 
-  data_jags = list(y=Y[[i]], t=t, Wa=Wa, Wb=Wb, Wc=Wc)
-
-  #set.seed(100)
-  mod = jags.model(textConnection(get(model)), data=data_jags, inits = inits, n.chains=nc, n.adapt=nb, quiet=TRUE)
+  # set.seed(100)
+  mod = jags.model(textConnection(get(model)), data=data_jags, inits=inits, n.chains=nc, n.adapt=nb, quiet=TRUE)
   update(mod, n.iter=ni, progress.bar="none")
   mod_sim = try(coda.samples(model=mod, variable.names=params, n.iter=ni, thin=thin,progress.bar="none"))
 
   if(class(mod_sim) != "try-error"){
          mod_chain = as.data.frame(do.call(rbind, mod_sim))
+         L0 = 14
 
          source("posterior_sample.R")
-         future <- pred(L=L, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
-         mod_chain_y = future[[1]]
+         #future <- pred(L=L0, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
+         future <- pred(L=L0, B=t, a=mod_chain[[paste0("a[",t,"]")]], b=mod_chain[["b"]], c=mod_chain[[paste0("c[",t,"]")]], taua=mod_chain[["Wa"]], taub=Wb, tauc=mod_chain[["Wc"]])
          mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[i]][t]
 
          ### list output
-         L0 = 14
+        
          df_predict <- data.frame( date = as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01"),
                                    q25  = colQuantiles(mod_chain_cumy[,1:L0], prob=.025),
                                    med  = colQuantiles(mod_chain_cumy[,1:L0], prob=.5),
@@ -100,7 +126,9 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                                    m    = colMeans(mod_chain_cumy[,1:L0]))
          row.names(df_predict) <- NULL
 
-         {if(country_name %in% c("China","Canada","Japan","India")){
+         lt_predict <- lt_summary <- NULL
+         if(FALSE){
+#         {if(country_name %in% c("China","Canada","Japan","India")){
           #longterm
           L0 = 100
           Wa = 1e25
@@ -108,7 +136,8 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
           Wc = 1e25
 
         #faz a predicao de longo termo
-          future <- pred(L=L0, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
+          #future <- pred(L=L0, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
+          future <- pred(L=L0, B=t, a=mod_chain[[paste0("a[",t,"]")]], b=mod_chain[["b"]], c=mod_chain[[paste0("c[",t,"]")]], taua=Wa, taub=Wb, tauc=Wc)
           mu_n_new =  future[[2]]
           mod_cumMu = rowSums(mu_n_new) + Y[[i]][t]
 
@@ -141,10 +170,11 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                             Dat25=Dat25,
                             Dat500=Dat500,
                             Dat975=Dat975)
+          }
           list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary)
-         }
-         else list_out <- list( df_predict = df_predict)
-         }
+#         }
+#         else list_out <- list( df_predict = df_predict)
+#         }
          name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS
@@ -155,7 +185,8 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
          source("mcmcplot_country.R")
          report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
-         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
+         #mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
+         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b"), paste0("c")),
                           dir = report_directory,
                           filename = paste0(country_name,'_',colnames(Y)[i],'_diagnostics'),
                           heading = paste0(country_name,'_',colnames(Y)[i]),
