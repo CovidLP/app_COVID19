@@ -124,11 +124,11 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
-            # h5("Em desenvolvimento/Under development"),
-            # h5("\n"),
-            uiOutput("plotTitle_LT"),
-            withSpinner( # add spinner while loading
-              plotlyOutput("LTpred"))  # gráfico previsão curto prazo
+              h5("Em desenvolvimento/Under development") # ,
+          #   # h5("\n"),
+          #   uiOutput("plotTitle_LT"),
+          #   withSpinner( # add spinner while loading
+          #     plotlyOutput("LTpred"))  # gráfico previsão curto prazo
           )
           
         )

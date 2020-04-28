@@ -126,12 +126,12 @@ statesBR_STpred = sort(statesBR_STpred)
 
 #############################################
 ## list of countries for LONG TERM prediction
-countries_LTpred_orig = c("Brazil",
-  "Canada","China",
-  "India",#"Italy",
-  "Japan")
-statesBR_LTpred = c("<all>")
-# countries_LTpred_orig = countries_STpred_orig
+# countries_LTpred_orig = c("Brazil",
+#   "Canada","China",
+#   "India",#"Italy",
+#   "Japan")
+# # statesBR_LTpred = c("<all>")
+# # countries_LTpred_orig = countries_STpred_orig
 # statesBR_LTpred = statesBR_STpred
 
 
@@ -365,8 +365,9 @@ server = function(input, output, session) {
   
   ## setup the list of countries - LT prediction
   updateSelectInput(session, "country_LTpred",
-                    choices=countries_LTpred_orig, #selected="Brazil")
-                    selected="Japan")
+                    # choices=countries_LTpred_orig, #selected="Brazil")
+                    # selected="Japan")
+                    choices=NULL, selected=NULL)
   updateSelectInput(session, "state_LTpred", 
                     choices=NULL, selected=NULL)
 
@@ -474,7 +475,11 @@ server = function(input, output, session) {
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"), 
           legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
-          font=f1
+          font=f1,
+          # add vertical line on last observed day
+          shapes=list(type="line", opacity=0.7, line=list(color="grey", width=1),
+                      y0=0, y1=1, yref="paper",
+                      x0=last_date_n, x1=last_date_n)
         )
       
       varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
@@ -596,7 +601,8 @@ server = function(input, output, session) {
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
           legend=list(x=0.05, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
-          font=f1
+          font=f1,
+          shapes=list(type="line", y0=0, y1=1, yref="paper", x0=last_date_n, x1=last_date_n)
         )
       
       ## portuguese labels for legend
