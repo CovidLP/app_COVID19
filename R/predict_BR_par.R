@@ -97,7 +97,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 
   inits=list(
    #list(wa = rep(-2.3,t), wb=rep(-13.82,t), wc=rep(-2.3,t)) #chain 1
-   list(wa = c(log(a.init),rep(0,t-1)), b=b.init, wc=c(log(c.init),rep(0,t-1))) #chain 1
+   list(wa = c(log(a.init),rep(0,t-1)), b=b.init, wc=c(log(c.init),rep(0,t-1)), Wa=Wa, Wc=Wc) #chain 1
   ) #end of inits list
 
   # set.seed(100)
@@ -182,7 +182,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
     # report_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/report'
          #mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
-         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b"), paste0("c")),
+         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b"), paste0("c[",t,"]")),
                      dir = report_directory,
                      filename = paste0('Brazil_',file_id,'_diagnostics'),
                      heading = paste0('Brazil_',file_id),

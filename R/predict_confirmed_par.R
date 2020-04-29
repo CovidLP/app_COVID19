@@ -26,12 +26,15 @@ covid19_deaths <- loadData("time_series_covid19_deaths_global.csv", "deaths")
 covid19 <- covid19_confirm %>%  left_join(covid19_deaths)
 
 #countrylist = "Korea, South"
-countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Turkey", "Venezuela")                    
+#countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Turkey", "Venezuela")                    
+
+countrylist <- c("Argentina","Bolivia","Canada","Chile","Colombia","Ecuador", "Greece", "India", "Japan", "Korea, South", "Mexico", "Peru", "Paraguay", "Poland", "Russia", "South Africa", "United Kingdom", "Uruguay", "Sweden", "US", "Venezuela")                    
+
 #register cores
 registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 
 #for(country_name in countrylist){
-obj <- foreach( s = 1:length(countrylist) ) %dopar% {
+obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
    country_name <- countrylist[s]
 
@@ -50,12 +53,11 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
 # covid_country %>% print(n=Inf)
 
-
-
 ###########################################################################
 ###### JAGS 
 ###########################################################################
   Y = covid_country
+  t = dim(Y)[1]
 
   source("jags_poisson.R")
 
@@ -63,9 +65,6 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
   #L = 150
   #t0 = Sys.time()
   
-  Y = covid19 %>% filter(state==uf$state[s])
-  t = dim(Y)[1]
-
   #use static to provide initial values
   params = c("a","b","c")
   Wa = 1e4
@@ -100,7 +99,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
 
   inits=list(
    #list(wa = rep(-2.3,t), wb=rep(-13.82,t), wc=rep(-2.3,t)) #chain 1
-   list(wa = c(log(a.init),rep(0,t-1)), b=b.init, wc=c(log(c.init),rep(0,t-1))) #chain 1
+   list(wa = c(log(a.init),rep(0,t-1)), b=b.init, wc=c(log(c.init),rep(0,t-1)), Wa=Wa, Wc=Wc) #chain 1
   ) #end of inits list
 
   # set.seed(100)
@@ -115,6 +114,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
          source("posterior_sample.R")
          #future <- pred(L=L0, B=t, a=mod_chain[[t]], b=mod_chain[[2*t]], c=mod_chain[[3*t]], taua=Wa, taub=Wb, tauc=Wc)
          future <- pred(L=L0, B=t, a=mod_chain[[paste0("a[",t,"]")]], b=mod_chain[["b"]], c=mod_chain[[paste0("c[",t,"]")]], taua=mod_chain[["Wa"]], taub=Wb, tauc=mod_chain[["Wc"]])
+         mod_chain_y = future[[1]]
          mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[i]][t]
 
          ### list output
@@ -170,11 +170,11 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                             Dat25=Dat25,
                             Dat500=Dat500,
                             Dat975=Dat975)
-          }
+         }
           list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary)
 #         }
 #         else list_out <- list( df_predict = df_predict)
-#         }
+#        }
          name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS
@@ -186,7 +186,7 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
          source("mcmcplot_country.R")
          report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
          #mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
-         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b"), paste0("c")),
+         mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b"), paste0("c[",t,"]")),
                           dir = report_directory,
                           filename = paste0(country_name,'_',colnames(Y)[i],'_diagnostics'),
                           heading = paste0(country_name,'_',colnames(Y)[i]),
@@ -194,6 +194,5 @@ obj <- foreach( s = 1:length(countrylist) ) %dopar% {
                           country = country_name,
                           type = colnames(Y)[i])
     }
-
     else print(paste0("ERROR:",country_name))
 }
