@@ -198,7 +198,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
          ### saveRDS
          results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
          #results_directory = getwd()#'C:/Users/ricar/Dropbox/covid19/R/predict/'
-         name.file <- paste0(results_directory,name.to.save,'_',colnames(Y)[i],'.rds')
+         name.file <- paste0(results_directory,name.to.save,'_',colnames(Y)[2],'.rds')
          saveRDS(list_out, file=name.file)
 
          source("mcmcplot_country.R")

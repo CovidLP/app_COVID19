@@ -153,38 +153,13 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
       # mu_n_new =  future[[2]]
       # mod_cumMu = rowSums(mu_n_new) + Y[[i]][t]
 
-      mu_n_new = as.matrix(mod_chain[mu_pos])[,-(1:t)]
-      mod_cumMu = rowSums(mu_n_new)
-            
-      u <- sort(mod_cumMu)
-      q <- c(round(nrow(mu_n_new)*.05,0),round(nrow(mu_n_new)*.5,0),round(nrow(mu_n_new)*.95,0))
-      pos <- rep(0,length(q))
-      for(k in 1:length(q)) pos[k] <- which(mod_cumMu == u[k])
-      
-      #vetor de data futuras e pega a posicao do maximo do percentil 25.
-      dat.vec <- as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01")
-      posMax.q25 <- which.max(mu_n_new[pos[1],])
-      
-      #minimos de dias no futuro para aceitar que o pico ainda não chegou
-      Dat25 <- Dat500 <- Dat975 <- NULL
-      days <- 5
-      if(dat.vec[posMax.q25] > max(Y$date)+days){
-        Dat25 <- dat.vec[posMax.q25]
-        Dat500 <- dat.vec[which.max(mu_n_new[pos[2],])]
-        Dat975 <- dat.vec[which.max(mu_n_new[pos[3],])]
-      }
-      
-      lt_predict <- data.frame( date = dat.vec,
-                                q25  = mu_n_new[pos[1],],
-                                med  = mu_n_new[pos[2],],
-                                q975 = mu_n_new[pos[3],])
+      lt_predict <- data.frame( date = as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01"),
+                              q25  = colQuantiles(mod_chain_cumy[,1:L0], prob=.05),
+                              med  = colQuantiles(mod_chain_cumy[,1:L0], prob=.5),
+                              q975 = colQuantiles(mod_chain_cumy[,1:L0], prob=.95),
+                              m    = colMeans(mod_chain_cumy[,1:L0]))     
       row.names(lt_predict) <- NULL
-      lt_summary <- list(NTC25 =mod_cumMu[pos[1]],
-                         NTC500=mod_cumMu[pos[2]],
-                         NTC975=mod_cumMu[pos[3]],
-                         Dat25=Dat25,
-                         Dat500=Dat500,
-                         Dat975=Dat975)
+
     }
     list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary)
     
@@ -194,7 +169,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     ### saveRDS
     results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
     # results_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/'
-    file_id <- ifelse(uf$state[s]=='BR', colnames(Y)[i] , paste0(uf$state[s],'_',colnames(Y)[i],'e'))
+    file_id <- ifelse(uf$state[s]=='BR', colnames(Y)[i] , paste0(uf$state[s],'_',colnames(Y)[2],'e'))
     saveRDS(list_out, file=paste0(results_directory,'Brazil_',file_id,'.rds'))
     
     ### report
