@@ -163,6 +163,7 @@ shinyUI(
             h3("Contato/Contact:"),
             tags$a(href="mailto:danig@ufmg.br", "danig@ufmg.br"),
             h3("Equipe/Team:"),
+<<<<<<< HEAD
             p("Prof. Dani Gamerman - coordenador",br(),
               "Prof. Marcos Prates",br(),
               "Profa. Thaís Paiva",br(),
@@ -183,6 +184,12 @@ shinyUI(
               "Vitor Faria de Carvalho Oliveira"),
             div(tags$b("Doutora:"),br(),
               "Juliana Freitas De Mello E Silva")
+=======
+            p("Prof. Dani Gamerman - coordenador"), #(DEST/UFMG)")
+            p("Prof. Marcos Prates"),
+            p("Profa. Thaís Paiva"),
+            p("Prof. Vinícius Mayrink")
+>>>>>>> 82977de5c3e32e6819c4278d40e7f0b065c4373e
           ),
           
           ## painel principal 
