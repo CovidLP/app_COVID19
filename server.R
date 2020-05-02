@@ -8,6 +8,8 @@ library(dplyr)
 library(tidyr)
 library(httr)
 
+Sys.setlocale("LC_TIME", "us")
+
 ##############################################################################
 
 ## define font to be used later
@@ -126,13 +128,21 @@ statesBR_STpred = sort(statesBR_STpred)
 
 #############################################
 ## list of countries for LONG TERM prediction
-# countries_LTpred_orig = c("Brazil",
+# countries_LTpred_orig = c("Brazil") #,
 #   "Canada","China",
 #   "India",#"Italy",
 #   "Japan")
 # # statesBR_LTpred = c("<all>")
-# # countries_LTpred_orig = countries_STpred_orig
-# statesBR_LTpred = statesBR_STpred
+
+countries_LTpred_orig = countries_STpred_orig
+## REMOVE SWITZERLAND 
+countries_LTpred_orig = countries_LTpred_orig[-which(countries_LTpred_orig=="Switzerland")]
+
+## list of Brazil's states - LONG TERM
+statesBR_LTpred = statesBR_STpred
+## REMOVE AC, AL, SC
+statesBR_LTpred = statesBR_LTpred[-which(statesBR_LTpred%in%c("AC", "AL", "SC"))]
+
 
 
 ## read RDS files from github repository
@@ -365,9 +375,9 @@ server = function(input, output, session) {
   
   ## setup the list of countries - LT prediction
   updateSelectInput(session, "country_LTpred",
-                    # choices=countries_LTpred_orig, #selected="Brazil")
+                    choices=countries_LTpred_orig, selected="Brazil")
                     # selected="Japan")
-                    choices=NULL, selected=NULL)
+                    # choices=NULL, selected=NULL)
   updateSelectInput(session, "state_LTpred", 
                     choices=NULL, selected=NULL)
 
@@ -567,24 +577,33 @@ server = function(input, output, session) {
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         # config(displayModeBar=FALSE) %>%
-        plotly::config(displayModeBar=TRUE, locale='pt-br') %>%
+        plotly::config(displayModeBar=TRUE ) %>% #, locale='pt-br') %>%
         layout(
           title = list(
             text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
                         "<br>Em desenvolvimento/Under development"),
             xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
-          annotations = list(text = paste0(ifelse(is.null(pred_summary$Dat500),"",
-                                                  paste0("<b>Pico estimado/Estimated peak 95% IC:</b> (",
-                                                         format(pred_summary$Dat25,form="%d/%b"),
+          annotations = list(text = paste0(ifelse(is.null(pred_summary$high.dat.med),"",
+                                                  paste0("<b>Estimated peak 95% CI:</b> (",
+                                                         format(pred_summary$high.dat.low,form="%d/%b"),
                                                          ", ",
-                                                         format(pred_summary$Dat975,form="%d/%b"),
+                                                         format(pred_summary$high.dat.upper,form="%d/%b"),
                                                          ")<br>")),
-                                           "<b>Número total de Casos/Total Number of Cases:</b> ",
-                                           round(pred_summary$NTC500,0),"<br><b>95% IC:</b> (",
+                                           "<b>Total Number of Cases:</b> ",
+                                           round(pred_summary$NTC500,0),
+                                           "<br><b>95% CI:</b> (",
                                            round(pred_summary$NTC25,0),
-                                           ", ", round(pred_summary$NTC975,0),")"),
+                                           ", ", round(pred_summary$NTC975,0),") <br>",
+                                           "<b>End (99%) of the pandemic:</b>",
+                                           format(pred_summary$end.dat.med, form="%d/%b"),
+                                           "<br><b>95% CI:</b> (",
+                                           format(pred_summary$end.dat.low,form="%d/%b"),
+                                           ", ",
+                                           format(pred_summary$end.dat.upper,form="%d/%b"),
+                                           ")"
+                                           ),
                              x=max(pred_n$date),
-                             y=0.95*max(unlist(data[[paste0(varPrefix, metric)]],pred_n[,-1])),
+                             y=0.9*max(c(unlist(data[[paste0(varPrefix, metric)]]),max(pred_n[,-1]))),
                              font=list(family="Arial",size=10), align="right",
                              showarrow=FALSE),
           xaxis=list(
@@ -600,15 +619,19 @@ server = function(input, output, session) {
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
-          legend=list(x=0.05, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.01, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
           font=f1,
-          shapes=list(type="line", y0=0, y1=1, yref="paper", x0=last_date_n, x1=last_date_n)
+          # add vertical line on last observed day
+          shapes=list(type="line", opacity=0.7, line=list(color="grey", width=1),
+                      y0=0, y1=1, yref="paper",
+                      x0=last_date_n, x1=last_date_n)
         )
       
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
-                         Confirmed="Casos Confirmados/Confirmed Cases")
+                         # Confirmed="Casos Confirmados/Confirmed Cases")
+                         Confirmed="Confirmed Cases")
       
       plt = plt %>%
         ## add lines for observed data
@@ -627,7 +650,8 @@ server = function(input, output, session) {
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               pred_n$q25),
           showlegend=F,
-          name=paste("95% IC - ",metric_pt,"CI"),
+          # name=paste("95% IC - ",metric_pt,"CI"),
+          name=paste("95% CI - ",metric_pt),
           type='scatter', #mode = 'none',
           mode='lines', hoverinfo="x+y",
           fillcolor='rgba(150,150,150,0.5)',
@@ -644,7 +668,8 @@ server = function(input, output, session) {
           mode='lines', hoverinfo="x+y",
           fill='tonexty',
           # showlegend=F,
-          name=paste("95% IC - ",metric_pt,"CI"),
+          # name=paste("95% IC - ",metric_pt,"CI"),
+          name=paste("95% CI - ",metric_pt),
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0)# , dash='dot')
         ) %>%
@@ -657,7 +682,8 @@ server = function(input, output, session) {
               # pred_n$med[1:input$pred_time]),
               pred_n$med),
           type='scatter', mode='lines+markers', hoverinfo="x+y",
-          name=paste("Previsão", metric_pt, "Prediction"),
+          # name=paste("Previsão", metric_pt, "Prediction"),
+          name=paste(metric_pt, "Prediction"),
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
         )
       plt
@@ -672,6 +698,19 @@ server = function(input, output, session) {
         font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
         title)
   })
+  
+
+  # ## observe if there is any change on the country - LT pred
+  # observeEvent(input$country_LTpred, {
+  #   if(input$country_LTpred == "Switzerland"){ # if country is Switzerland
+  #     output$plotLT_ok = FALSE
+  #   }else{ # if other countries
+  #     output$plotLT_ok = TRUE
+  #   }
+  # })
+  
+
+     
   
   ###################################################################
   
