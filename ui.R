@@ -13,6 +13,9 @@ shinyUI(
   
   fluidPage(
     
+    ## Include Google Analytics
+    tags$head(includeHTML(("google-analytics.html"))),
+    
     ## título
     titlePanel(
       div(column(width = 9, h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
@@ -124,13 +127,17 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
-              h5("Em desenvolvimento/Under development") # ,
-          #   # h5("\n"),
-          #   uiOutput("plotTitle_LT"),
-          #   withSpinner( # add spinner while loading
-          #     plotlyOutput("LTpred"))  # gráfico previsão curto prazo
+            # h5("Em desenvolvimento/Under development") # ,
+            #   # h5("\n"),
+            uiOutput("plotTitle_LT"),
+            withSpinner( # add spinner while loading
+              # if(output.plotLT_ok == TRUE){
+                plotlyOutput("LTpred")  # gráfico previsão curto prazo
+              # }else{
+                # h5("Resultados não disponíveis/Results not available")
+              # }
+            )
           )
-          
         )
       ),
       
@@ -143,6 +150,34 @@ shinyUI(
           mainPanel(
             tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
                         src="Covid19UFMG.pdf"))
+      ),
+      
+      
+      ## 5a aba
+      tabPanel(
+        title = HTML("<b>Sobre</b>/<br>About"),
+        
+        sidebarLayout(
+          ## painel lateral 
+          sidebarPanel(
+            h3("Contato/Contact:"),
+            tags$a(href="mailto:danig@ufmg.br", "danig@ufmg.br"),
+            h3("Equipe/Team:"),
+            p("Prof. Dani Gamerman - coordenador"), #(DEST/UFMG)")
+            p("Prof. Marcos Prates"),
+            p("Profa. Thaís Paiva"),
+            p("Prof. Vinícius Mayrink")
+          ),
+          
+          ## painel principal 
+          mainPanel(
+            # h3("Sobre o projeto"),
+            # p(),
+            h3("Mídia"),
+            p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia"))
+          )
+            
+        )
       )
       
     )
