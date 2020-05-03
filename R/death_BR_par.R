@@ -12,68 +12,63 @@ library(matrixStats)
 library(mcmcplots)
 library(foreach)
 library(doMC)
-
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series"
-source("loadData.R")
+baseURLbr = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
 
-covid19_confirm <- loadData("time_series_covid19_confirmed_global.csv", "confirmed")
-# covid19_recover <- loadData("time_series_covid19_recovered_global.csv", "recovered")
-covid19_deaths <- loadData("time_series_covid19_deaths_global.csv", "deaths")
+covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+  rename(state = estado,
+         date = data,
+         n = casos.acumulados,
+         d = obitos.acumulados,
+         n_new = novos.casos,
+         d_new = obitos.novos) %>%
+  mutate(date = as.Date(date)) %>%
+  select(date, n, d, n_new, d_new, state) %>%
+  arrange(state,date) %>% filter(date>'2020-02-01')
 
-covid19 <- covid19_confirm %>%  left_join(covid19_deaths)
+covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+  mutate(state = 'BR') %>%
+  rename(date = data,
+         n = casos.acumulados,
+         d = obitos.acumulados,
+         n_new = novos.casos,
+         d_new = obitos.novos) %>%
+  mutate(date = as.Date(date)) %>%
+  select(date, n, d, n_new, d_new, state) %>%
+  arrange(date) %>% filter(date>'2020-02-01')
 
-#countrylist = "Korea, South"
-countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","China","Colombia","Ecuador","France","Germany","Greece", "India", "Iran", "Ireland", "Italy", "Japan", "Korea, South", "Mexico", "Netherlands", "New Zealand", "Norway", "Peru", "Paraguay", "Poland", "Portugal", "Russia", "South Africa", "Spain","United Kingdom", "Uruguay", "Sweden", "Switzerland", "US", "Turkey", "Venezuela")                    
-
-#countrylist <- c("Argentina","Bolivia","Canada","Chile","Colombia","Ecuador", "Greece", "India", "Japan", "Korea, South", "Mexico", "Peru", "Paraguay", "Poland", "Russia", "South Africa", "United Kingdom", "Uruguay", "Sweden", "US", "Venezuela")                    
-
-#register cores
-registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-
-#for(country_name in countrylist){
-obj <- foreach(s = 1:length(countrylist) ) %dopar% {
-
-   country_name <- countrylist[s]
-
-   covid_states <- covid19 %>% filter(country==country_name) %>%
-          mutate(confirmed_new = confirmed - lag(confirmed, default=0),
-          # recovered_new = recovered - lag(recovered, default=0),
-          deaths_new = deaths - lag(deaths, default=0)) %>%
-          arrange(date,state)
-
-   covid_country <- covid_states %>% group_by(date) %>%
-          summarize(n = sum(confirmed, na.rm=T),
-              d = sum(deaths, na.rm=T),
-              n_new = sum(confirmed_new, na.rm=T),
-              d_new = sum(deaths_new, na.rm=T)) %>%
-              arrange(date) %>% filter(date>'2020-02-01')
-   
-# covid_country %>% print(n=Inf)
+covid19 <- bind_rows(covid19uf,covid19br)
+uf <- distinct(covid19,state)
 
 ###########################################################################
 ###### JAGS 
 ###########################################################################
-  Y = covid_country
+#register cores
+registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 
-  while(any(Y$n_new <0)){
-     pos <- which(Y$n_new <0)
+#for ( s in 1:dim(uf)[1] ) {
+obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
+  #obj <- foreach( s = 1:3 ) %dopar% {
+  source("jags_poisson.R")
+  
+  i = 5 # (2: confirmed, 3: deaths, 4: new confirmed, 5: new deaths)
+  L = 300
+  #t0 = Sys.time()
+  
+  Y = covid19 %>% filter(state==uf$state[s])
+
+  while(any(Y$d_new <0)){
+     pos <- which(Y$d_new <0)
      for(j in pos){
-        Y$n_new[j-1] = Y$n_new[j] + Y$n_new[j-1]
-        Y$n_new[j] = 0
-        Y$n[j-1] = Y$n[j]
+        Y$d_new[j-1] = Y$d_new[j] + Y$d_new[j-1]
+        Y$d_new[j] = 0
+        Y$d[j-1] = Y$d[j]
      }
    }
 
   t = dim(Y)[1]
-
-  source("jags_poisson.R")
-
-  i = 4 # (2: confirmed, 3: deaths)
-  L = 300
-  #t0 = Sys.time()
   
   #use static to provide initial values
   params = c("a","b","c","f","yfut","mu")
@@ -87,8 +82,8 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   mod_sim = try(coda.samples(model=mod, variable.names=params, n.iter=ni, thin=thin,progress.bar="none"))
   
   if(class(mod_sim) != "try-error" && class(mod) != "try-error"){
+    
     mod_chain = as.data.frame(do.call(rbind, mod_sim))
-    # names(mod_chain)
     
     a_pos = "a"
     b_pos = "b"
@@ -97,9 +92,9 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     mu_pos = paste0("mu[",1:(t+L),"]")
     yfut_pos = paste0("yfut[",1:L,"]")
     L0 = 14
-
+    
     mod_chain_y = as.matrix(mod_chain[yfut_pos])
-    mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[2]][t]
+    mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[3]][t]
     
     
     ### list output
@@ -111,10 +106,10 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     row.names(df_predict) <- NULL 
     
     lt_predict <- lt_summary <- NULL
-
+ 
     #longterm
       L0 = 200
-
+  
       #acha a curva de quantil 
       lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
       medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
@@ -144,19 +139,19 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
       #calcula o fim da pandemia
       q <- .99
-      low.cum <- c(lowquant[1]+Y[[2]][t],lowquant[2:length(lowquant)])
+      low.cum <- c(lowquant[1]+Y[[3]][t],lowquant[2:length(lowquant)])
       low.cum <- colCumsums(as.matrix(low.cum))
       low.cum <- low.cum/low.cum[length(low.cum)]
       low.end <- which(low.cum - q > 0)[1]
       dat.low.end <- dat.vec[low.end]
 
-      med.cum <- c(medquant[1]+Y[[2]][t],medquant[2:length(medquant)])
+      med.cum <- c(medquant[1]+Y[[3]][t],medquant[2:length(medquant)])
       med.cum <- colCumsums(as.matrix(med.cum))
       med.cum <- med.cum/med.cum[length(med.cum)]
       med.end <- which(med.cum - q > 0)[1]
       dat.med.end <- dat.vec[med.end]
 
-      high.cum <- c(highquant[1]+Y[[2]][t],highquant[2:length(highquant)])
+      high.cum <- c(highquant[1]+Y[[3]][t],highquant[2:length(highquant)])
       high.cum <- colCumsums(as.matrix(high.cum))
       high.cum <- high.cum/high.cum[length(high.cum)]
       high.end <- which(high.cum - q > 0)[1]
@@ -169,42 +164,51 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
                               m    = colMeans(mod_chain_y[,1:L0]))     
       row.names(lt_predict) <- NULL
 
-      lt_summary <- list(NTC25 =sum(lowquant)+Y[[2]][t],
-                            NTC500=sum(medquant)+Y[[2]][t],
-                            NTC975=sum(highquant)+Y[[2]][t],
+      lt_summary <- list(NTC25 =sum(lowquant)+Y[[3]][t],
+                            NTC500=sum(medquant)+Y[[3]][t],
+                            NTC975=sum(highquant)+Y[[3]][t],
                             high.dat.low=Dat25,
                             high.dat.med=Dat500,
                             high.dat.upper=Dat975,
 			    end.dat.low = dat.low.end,
 			    end.dat.med = dat.med.end,
 			    end.dat.upper = dat.high.end)
+         
+    ##flag
+    cm <- 100000
+    ch <- 500000
+    flag <- 0 #tudo bem
+    {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
+    else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
 
-      ##flag
-      cm <- 10000000
-      ch <- 50000000
-      flag <- 0 #tudo bem
-      {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
-      else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
-
-      list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
-      name.to.save <- gsub(" ", "-", country_name)
-
-         ### saveRDS
-         results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
-         #results_directory = getwd()#'C:/Users/ricar/Dropbox/covid19/R/predict/'
-         name.file <- paste0(results_directory,name.to.save,'_',colnames(Y)[2],'.rds')
-         saveRDS(list_out, file=name.file)
-
-         source("mcmcplot_country.R")
-         report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
-         #mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
-         mcmcplot_country(mcmcout = mod_sim, parms = c("a", "b", "c", "f"),
-                          dir = report_directory,
-                          filename = paste0(country_name,'_',colnames(Y)[i],'_diagnostics'),
-                          heading = paste0(country_name,'_',colnames(Y)[i]),
-                          extension = "html", greek = TRUE,
-                          country = country_name,
-                          type = colnames(Y)[i])
-    }
-    else print(paste0("ERROR:",country_name))
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
+        
+    ### saveRDS
+    results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
+    # results_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/'
+    file_id <- ifelse(uf$state[s]=='BR', colnames(Y)[3] , paste0(uf$state[s],'_',colnames(Y)[3],'e'))
+    saveRDS(list_out, file=paste0(results_directory,'Brazil_',file_id,'.rds'))
+    
+    ### report
+    source("mcmcplot_country.R")
+    report_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/reports"
+    # report_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/report'
+    #mcmcplot_country(mcmcout = mod_sim, parms = c(paste0("a[",t,"]"), paste0("b[",t,"]"), paste0("c[",t,"]")),
+	    mcmcplot_country(mcmcout = mod_sim, parms = c("a", "b", "c", "f"),
+		             dir = report_directory,
+		             filename = paste0('Brazil_',file_id,'_diagnostics'),
+		             heading = paste0('Brazil_',file_id),
+		             extension = "html", greek = TRUE,
+		             country = 'Brazil',
+		             type = file_id)
+    
+    ### run time
+    #run_time = round(as.numeric(Sys.time()-t0, units="mins"),2)
+    #print(noquote(paste(run_time, "minutes to", uf$state[s])))
+    
+  }
+  
+  else print(paste0("ERROR:",uf$state[s]))
+  
 }
+

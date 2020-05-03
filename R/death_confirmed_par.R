@@ -58,12 +58,12 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 ###########################################################################
   Y = covid_country
 
-  while(any(Y$n_new <0)){
-     pos <- which(Y$n_new <0)
+  while(any(Y$d_new <0)){
+     pos <- which(Y$d_new <0)
      for(j in pos){
-        Y$n_new[j-1] = Y$n_new[j] + Y$n_new[j-1]
-        Y$n_new[j] = 0
-        Y$n[j-1] = Y$n[j]
+        Y$d_new[j-1] = Y$d_new[j] + Y$d_new[j-1]
+        Y$d_new[j] = 0
+        Y$d[j-1] = Y$d[j]
      }
    }
 
@@ -71,7 +71,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
   source("jags_poisson.R")
 
-  i = 4 # (2: confirmed, 3: deaths)
+  i = 5 # (2: confirmed, 3: deaths)
   L = 300
   #t0 = Sys.time()
   
@@ -99,7 +99,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     L0 = 14
 
     mod_chain_y = as.matrix(mod_chain[yfut_pos])
-    mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[2]][t]
+    mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[3]][t]
     
     
     ### list output
@@ -144,19 +144,19 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
       #calcula o fim da pandemia
       q <- .99
-      low.cum <- c(lowquant[1]+Y[[2]][t],lowquant[2:length(lowquant)])
+      low.cum <- c(lowquant[1]+Y[[3]][t],lowquant[2:length(lowquant)])
       low.cum <- colCumsums(as.matrix(low.cum))
       low.cum <- low.cum/low.cum[length(low.cum)]
       low.end <- which(low.cum - q > 0)[1]
       dat.low.end <- dat.vec[low.end]
 
-      med.cum <- c(medquant[1]+Y[[2]][t],medquant[2:length(medquant)])
+      med.cum <- c(medquant[1]+Y[[3]][t],medquant[2:length(medquant)])
       med.cum <- colCumsums(as.matrix(med.cum))
       med.cum <- med.cum/med.cum[length(med.cum)]
       med.end <- which(med.cum - q > 0)[1]
       dat.med.end <- dat.vec[med.end]
 
-      high.cum <- c(highquant[1]+Y[[2]][t],highquant[2:length(highquant)])
+      high.cum <- c(highquant[1]+Y[[3]][t],highquant[2:length(highquant)])
       high.cum <- colCumsums(as.matrix(high.cum))
       high.cum <- high.cum/high.cum[length(high.cum)]
       high.end <- which(high.cum - q > 0)[1]
@@ -169,9 +169,9 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
                               m    = colMeans(mod_chain_y[,1:L0]))     
       row.names(lt_predict) <- NULL
 
-      lt_summary <- list(NTC25 =sum(lowquant)+Y[[2]][t],
-                            NTC500=sum(medquant)+Y[[2]][t],
-                            NTC975=sum(highquant)+Y[[2]][t],
+      lt_summary <- list(NTC25 =sum(lowquant)+Y[[3]][t],
+                            NTC500=sum(medquant)+Y[[3]][t],
+                            NTC975=sum(highquant)+Y[[3]][t],
                             high.dat.low=Dat25,
                             high.dat.med=Dat500,
                             high.dat.upper=Dat975,
@@ -179,20 +179,20 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 			    end.dat.med = dat.med.end,
 			    end.dat.upper = dat.high.end)
 
-      ##flag
-      cm <- 10000000
-      ch <- 50000000
-      flag <- 0 #tudo bem
-      {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
-      else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
+         ##flag
+         cm <- 200000
+         ch <- 500000
+         flag <- 0 #tudo bem
+         {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
+         else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
 
-      list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
-      name.to.save <- gsub(" ", "-", country_name)
+         list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
+         name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS
          results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
          #results_directory = getwd()#'C:/Users/ricar/Dropbox/covid19/R/predict/'
-         name.file <- paste0(results_directory,name.to.save,'_',colnames(Y)[2],'.rds')
+         name.file <- paste0(results_directory,name.to.save,'_',colnames(Y)[3],'.rds')
          saveRDS(list_out, file=name.file)
 
          source("mcmcplot_country.R")

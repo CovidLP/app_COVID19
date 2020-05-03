@@ -58,6 +58,16 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   #t0 = Sys.time()
   
   Y = covid19 %>% filter(state==uf$state[s])
+
+  while(any(Y$n_new <0)){
+     pos <- which(Y$n_new <0)
+     for(j in pos){
+        Y$n_new[j-1] = Y$n_new[j] + Y$n_new[j-1]
+        Y$n_new[j] = 0
+        Y$n[j-1] = Y$n[j]
+     }
+   }
+
   t = dim(Y)[1]
   
   #use static to provide initial values
@@ -79,7 +89,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     b_pos = "b"
     c_pos = "c"
     f_pos = "f"
-    mu_pos = paste0("mu[",1:t,"]")
+    mu_pos = paste0("mu[",1:(t+L),"]")
     yfut_pos = paste0("yfut[",1:L,"]")
     L0 = 14
     
@@ -107,16 +117,25 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 
       #vetor de data futuras e pega a posicao do maximo do percentil 25.
       dat.vec <- as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01")
-      posMax.q25 <- which.max(lowquant)
+      dat.full <- c(Y[[1]],dat.vec)
 
-      #minimos de dias no futuro para aceitar que o pico ainda não chegou
+      #definicao do pico usando a curva das medias
+      mod_chain_mu = as.matrix(mod_chain[mu_pos])
+      mu25 <- apply(mod_chain_mu,2,quantile, probs=0.025)
+      mu50 <- apply(mod_chain_mu,2,quantile, probs=0.5)
+      mu975 <- apply(mod_chain_mu,2,quantile, probs=.975)
+
+      posMax.q25 <- which.max(mu25[1:L0]) 
+      aux <- mu975 - mu25[posMax.q25]      
+      aux2 <- aux[posMax.q25:L0]
+      val <- min(aux2[aux2>0]) 
+      dat.max <- which(aux == val)
+
       Dat25 <- Dat500 <- Dat975 <- NULL
-      days <- 5
-      if(dat.vec[posMax.q25] > max(Y$date)+days){
-            Dat25 <- dat.vec[posMax.q25]
-            Dat500 <- dat.vec[which.max(medquant)]
-            Dat975 <- dat.vec[which.max(highquant)]
-      }
+
+      Dat25 <- dat.full[posMax.q25]
+      Dat500 <- dat.full[which.max(mu50[1:L0])]
+      Dat975 <- dat.full[dat.max]
 
       #calcula o fim da pandemia
       q <- .99
@@ -154,9 +173,14 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 			    end.dat.low = dat.low.end,
 			    end.dat.med = dat.med.end,
 			    end.dat.upper = dat.high.end)
-         
-
-    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary)
+    ##flag
+    cm <- 10000000
+    ch <- 50000000
+    flag <- 0 #tudo bem
+    {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
+    else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
+      
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
         
     ### saveRDS
     results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
