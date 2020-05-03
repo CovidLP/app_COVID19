@@ -7,8 +7,9 @@
 library(dplyr)
 library(tidyr)
 library(httr)
+library(lubridate)
 
-Sys.setlocale("LC_TIME", "us")
+# Sys.setlocale("LC_TIME", "pt-br")
 
 ##############################################################################
 
@@ -21,6 +22,12 @@ f1 = list(#family="Courier New, monospace",
 minutesSinceLastUpdate = function(fileName) {
   (as.numeric(as.POSIXlt(Sys.time())) -  
      as.numeric(file.info(fileName)$ctime)) / 60
+}
+
+## function to format the dates for better plotting
+printDate = function(date){
+  # paste0(day(date),"/",month(date, lab=T, locale="us"))
+  paste0(day(date),"/",month(date, lab=T))
 }
 
 ##############################################################################
@@ -122,27 +129,24 @@ countries_STpred = sort(unique(  # country names without space
 countries_STpred_orig = gsub("-"," ", countries_STpred) # country names with space (original)
 
 ## list of Brazil's states
-statesBR_STpred = unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil") return(x[2]) ))
+statesBR_STpred = unique(
+  unlist(lapply(strsplit(aux,"_"), function(x) if(x[1]=="Brazil") return(x[2]) )))
 statesBR_STpred[is.na(statesBR_STpred)] = "<all>"
 statesBR_STpred = sort(statesBR_STpred)
 
 #############################################
 ## list of countries for LONG TERM prediction
-# countries_LTpred_orig = c("Brazil") #,
-#   "Canada","China",
-#   "India",#"Italy",
-#   "Japan")
-# # statesBR_LTpred = c("<all>")
-
 countries_LTpred_orig = countries_STpred_orig
-## REMOVE SWITZERLAND 
-countries_LTpred_orig = countries_LTpred_orig[-which(countries_LTpred_orig=="Switzerland")]
+# ## REMOVE SWITZERLAND 
+# countries_LTpred_orig = countries_LTpred_orig[-which(countries_LTpred_orig=="Switzerland")]
 
 ## list of Brazil's states - LONG TERM
 statesBR_LTpred = statesBR_STpred
-## REMOVE AC, AL, SC
-statesBR_LTpred = statesBR_LTpred[-which(statesBR_LTpred%in%c("AC", "AL", "SC"))]
-
+# ## REMOVE AC, AL, SC and more
+statesBR2rem = c("AC", "AL", "SC",
+                 "PB", "PI", "RN",
+                 "RR", "SE", "TO")
+# # statesBR_LTpred = statesBR_LTpred[-which(statesBR_LTpred%in%statesBR2rem)]
 
 
 ## read RDS files from github repository
@@ -156,6 +160,15 @@ githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
 
 server = function(input, output, session) {
   
+  ## add message on startup
+  showModal(modalDialog(
+    "Caso esteja acessando pelo celular, o aplicativo é melhor visualizado com o aparelho na horizontal.",
+    easyClose = T,
+    footer = tagList(
+      modalButton("Ok")
+    )
+  ))
+
   ###################
   ## OBSERVED DATA
   ## load data depending on the country/region selected
@@ -241,31 +254,35 @@ server = function(input, output, session) {
     country_name = input$country_STpred
     country_name = gsub(" ","-", country_name) # remove space from country name
     
+    metric = ifelse(input$metrics_ST=="Confirmed","n","d") # which results to load
+    
     if(country_name=="Brazil"){
       state = input$state_STpred
       if(state != "<all>"){
-        if(exists(paste0(country_name,"_",state))){
-          pred_n = get(paste0(country_name,"_",state))
+        if(exists(paste0(country_name,"_",state,"_",metric))){
+          pred_n = get(paste0(country_name,"_",state,"_",metric))
         }else{
-          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_ne.rds")))
-          assign(paste0(country_name,"_",state), pred_n)  # create country_name object
+          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_",metric,"e.rds")))
+          assign(paste0(country_name,"_",state,"_",metric), pred_n)  # create country_name object
         }
       }else{
-        if(exists(country_name)){
-          pred_n = get(country_name)
+        if(exists(paste0(country_name,"_",metric))){
+          pred_n = get(paste0(country_name,"_",metric))
         }else{
-          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
-          assign(country_name, pred_n)  # create country_name object
+          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",metric,".rds")))
+          assign(paste0(country_name,"_",metric), pred_n)  # create country_name object
         }
       }
     }else{
-      if(exists(country_name)){
-        pred_n = get(country_name)
+      if(exists(paste0(country_name,"_",metric))){
+        pred_n = get(paste0(country_name,"_",metric))
       }else{
-        pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
-        assign(country_name, pred_n)  # create country_name object
+        pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",metric,".rds")))
+        assign(paste0(country_name,"_",metric), pred_n)  # create country_name object
       }
     }
+    
+    closeAllConnections()
     
     ## select only object 'df_predict' from the list
     pred_n = pred_n$df_predict
@@ -326,37 +343,38 @@ server = function(input, output, session) {
     country_name = input$country_LTpred
     country_name = gsub(" ","-", country_name) # remove space from country name
     
+    if(country_name == "") return(NULL)
+    
+    metric = ifelse(input$metrics_LT=="Confirmed","n","d") # which results to load
+    
     if(country_name=="Brazil"){
       state = input$state_LTpred
       if(state != "<all>"){
-        if(exists(paste0(country_name,"_",state))){
-          pred_n = get(paste0(country_name,"_",state))
+        if(exists(paste0(country_name,"_",state,"_",metric))){
+          pred_n = get(paste0(country_name,"_",state,"_",metric))
         }else{
-          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_ne.rds")))
-          assign(paste0(country_name,"_",state), pred_n)  # create country_name object
+          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",state,"_",metric,"e.rds")))
+          assign(paste0(country_name,"_",state,"_",metric), pred_n)  # create country_name object
         }
       }else{
-        if(exists(country_name)){
-          pred_n = get(country_name)
+        if(exists(paste0(country_name,"_",metric))){
+          pred_n = get(paste0(country_name,"_",metric))
         }else{
-          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
-          assign(country_name, pred_n)  # create country_name object
+          pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",metric,".rds")))
+          assign(paste0(country_name,"_",metric), pred_n)  # create country_name object
         }
       }
     }else{
-      if(exists(country_name)){
-        pred_n = get(country_name)
+      if(exists(paste0(country_name,"_",metric))){
+        pred_n = get(paste0(country_name,"_",metric))
       }else{
-        pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_n.rds")))
-        assign(country_name, pred_n)  # create country_name object
+        pred_n = readRDS(url(paste0(githubURL,"/",country_name,"_",metric,".rds")))
+        assign(paste0(country_name,"_",metric), pred_n)  # create country_name object
       }
     }
     
-    # ## select only object 'lt_predict' from the list
-    # pred_n = pred_n$lt_predict
-    # pred_n$date = as.Date(pred_n$date)  # format date
-    # return(pred_n)
-    
+    closeAllConnections()
+
     pred_n$lt_predict$date = as.Date(pred_n$lt_predict$date)
     pred_n$df_predict = NULL  # remove df_predict object
     return(pred_n)
@@ -376,8 +394,6 @@ server = function(input, output, session) {
   ## setup the list of countries - LT prediction
   updateSelectInput(session, "country_LTpred",
                     choices=countries_LTpred_orig, selected="Brazil")
-                    # selected="Japan")
-                    # choices=NULL, selected=NULL)
   updateSelectInput(session, "state_LTpred", 
                     choices=NULL, selected=NULL)
 
@@ -420,13 +436,14 @@ server = function(input, output, session) {
           add_trace(
             x=~date, y=data[[paste0(varPrefix, metric)]],
             type='scatter', mode='lines+markers', hoverinfo="x+y",
-            name = metric_pt,
+            name= metric_pt,
             marker=list(
-              color=switch(metric,
-                           Deaths='rgb(200,30,30)',
-                           Recovered='rgb(30,200,30)',
+              color=switch(metric,Deaths='rgb(200,30,30)', # Recovered='rgb(30,200,30)',
                            Confirmed='rgb(100,140,240)'),
               line=list(color='rgb(8,48,107)', width=1.0)
+              # line=list(color=switch(metric,Deaths='rgb(200,30,30)', # Recovered='rgb(30,200,30)',
+              #                        Confirmed='rgb(100,140,240)'),
+              #           width=1.0)
             )
           )
       }
@@ -492,7 +509,9 @@ server = function(input, output, session) {
                       x0=last_date_n, x1=last_date_n)
         )
       
-      varPrefix = "Cum"; metric = "Confirmed"; legendPrefix = ""
+      # varPrefix = "Cum"; legendPrefix = ""
+      # metric = "Confirmed"; 
+      metric = input$metrics_ST
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
@@ -505,8 +524,12 @@ server = function(input, output, session) {
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
           type='scatter', mode='lines+markers', hoverinfo="x+y", 
           name=metric_pt,
-          marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
-                      line=list(color='rgb(8,48,107)', width=1.0))
+          marker=list(
+            color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
+            line=list(color='rgb(8,48,107)', width=1.0)
+            # line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
+            #           width=1.0)
+          )
         ) %>% 
         ## add 2,5% and 97,5% quantiles
         add_trace(
@@ -563,16 +586,21 @@ server = function(input, output, session) {
     ## plotly function for interactive plot
     renderPlotly({
       data = data_predLT()
+      if(nrow(data) == 0) return(NULL) ## DOUGLAS
       # pred_n = predLT_n()
       aux = predLT_n()
       pred_n = aux$lt_predict
       pred_summary = aux$lt_summary
+      mu_plot = aux$mu_plot
+      flag = aux$flag
 
       ## create last date and format dates for prediction
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
       
-      varPrefix = "New"; metric = "Confirmed"; legendPrefix = ""
+      # varPrefix = "New"; legendPrefix = ""
+      metric = input$metrics_LT
+      metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases") 
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
@@ -583,37 +611,39 @@ server = function(input, output, session) {
             text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
                         "<br>Em desenvolvimento/Under development"),
             xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
-          annotations = list(text = paste0(ifelse(is.null(pred_summary$high.dat.med),"",
+          annotations = list(text = paste0(ifelse(is.null(pred_summary$high.dat.med), "",
                                                   paste0("<b>Estimated peak 95% CI:</b> (",
-                                                         format(pred_summary$high.dat.low,form="%d/%b"),
+                                                         printDate(pred_summary$high.dat.low),
+                                                         # format(pred_summary$high.dat.low,form="%d/%b"),
                                                          ", ",
-                                                         format(pred_summary$high.dat.upper,form="%d/%b"),
+                                                         printDate(pred_summary$high.dat.upper),
+                                                         # format(pred_summary$high.dat.upper,form="%d/%b"),
                                                          ")<br>")),
-                                           "<b>Total Number of Cases:</b> ",
-                                           round(pred_summary$NTC500,0),
+                                           "<b>Total Number of ",metric_leg,":</b> ",
+                                           round(pred_summary$NTC500,0), "<br>",
+                                           ifelse(flag==1, "",
+                                                  paste0("<b>95% CI:</b> (", round(pred_summary$NTC25,0),
+                                                         ", ", round(pred_summary$NTC975,0),")<br>")),
+                                           "<b>End (99%) of the pandemic:</b> ",
+                                           printDate(pred_summary$end.dat.med),
+                                           # format(pred_summary$end.dat.med, form="%d/%b"),
                                            "<br><b>95% CI:</b> (",
-                                           round(pred_summary$NTC25,0),
-                                           ", ", round(pred_summary$NTC975,0),") <br>",
-                                           "<b>End (99%) of the pandemic:</b>",
-                                           format(pred_summary$end.dat.med, form="%d/%b"),
-                                           "<br><b>95% CI:</b> (",
-                                           format(pred_summary$end.dat.low,form="%d/%b"),
+                                           printDate(pred_summary$end.dat.low),
+                                           # format(pred_summary$end.dat.low,form="%d/%b"),
                                            ", ",
-                                           format(pred_summary$end.dat.upper,form="%d/%b"),
+                                           printDate(pred_summary$end.dat.upper),
+                                           # format(pred_summary$end.dat.upper,form="%d/%b"),
                                            ")"
                                            ),
-                             x=max(pred_n$date),
-                             y=0.9*max(c(unlist(data[[paste0(varPrefix, metric)]]),max(pred_n[,-1]))),
+                             # x=max(pred_n$date), y=1, yref="paper",
+                             x = 0.99, y = 0.95, xref="paper", yref="paper",
+                             # y=0.9*max(c(unlist(data[[paste0(varPrefix, metric)]]),max(pred_n[,-1]))),
                              font=list(family="Arial",size=10), align="right",
                              showarrow=FALSE),
           xaxis=list(
             title="",
             tickangle=-90, #type='category',
             ## add pred dates to the x axis
-            # ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
-                               # pred_dateStr)),                         # removing 1st 30 days
-            # tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
-                               # pred_n$date)),
             tick0=data$dateStr[1],dtick=7*86400000, # add ticks every week
             tickformat="%d/%b"
           ),
@@ -622,13 +652,13 @@ server = function(input, output, session) {
           legend=list(x=0.01, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
           font=f1,
           # add vertical line on last observed day
-          shapes=list(type="line", opacity=0.7, line=list(color="grey", width=1),
+          shapes=list(type="line", opacity=0.7, line=list(color="black", width=1),
                       y0=0, y1=1, yref="paper",
                       x0=last_date_n, x1=last_date_n)
         )
       
       ## portuguese labels for legend
-      metric_pt = switch(metric, Deaths="Mortes/Deaths",
+      metric_pt = switch(metric, Deaths="Deaths", #Deaths="Mortes/Deaths",
                          Recovered="Recuperados/Recovered Cases",
                          # Confirmed="Casos Confirmados/Confirmed Cases")
                          Confirmed="Confirmed Cases")
@@ -640,9 +670,15 @@ server = function(input, output, session) {
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)],#[-c(1:30)], 
           type='scatter', mode='lines+markers', hoverinfo="x+y",
           name=metric_pt,
-          marker=list(color=switch(metric, Confirmed='rgb(100,140,240)'),
-                      line=list(color='rgb(8,48,107)', width=1.0))
-        ) %>% 
+          marker=list(
+            color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
+            line=list(color='rgb(8,48,107)', width=1.0)
+            # line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
+            #           width=1.0)
+          )
+        ) # %>%
+      if(flag!=1){
+        plt = plt %>%
         ## add 2,5% and 97,5% quantiles
         add_trace(
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
@@ -672,14 +708,16 @@ server = function(input, output, session) {
           name=paste("95% CI - ",metric_pt),
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0)# , dash='dot')
-        ) %>%
+        )
+      }
+      plt = plt %>%
         ## add median of prediction
         add_trace(
+          # x=c(data$date[-c(1:(length(data$date)-length(mu_plot)))], # plot median for all data
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
-              # pred_n$date[1:input$pred_time]),
               pred_n$date),
+          # y=c(mu_plot,
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
-              # pred_n$med[1:input$pred_time]),
               pred_n$med),
           type='scatter', mode='lines+markers', hoverinfo="x+y",
           # name=paste("Previsão", metric_pt, "Prediction"),
@@ -700,37 +738,44 @@ server = function(input, output, session) {
   })
   
 
-  # ## observe if there is any change on the country - LT pred
-  # observeEvent(input$country_LTpred, {
-  #   if(input$country_LTpred == "Switzerland"){ # if country is Switzerland
-  #     output$plotLT_ok = FALSE
-  #   }else{ # if other countries
-  #     output$plotLT_ok = TRUE
-  #   }
-  # })
-  
+  ## hide plot -> if lt_summary$flag=2
+  # observeEvent(c(input$country_LTpred, input$state_LTpred), {
+  observe({
+    ## add code to read results and get flag
+    ## get flag from confirmed or deaths!
+    flag = predLT_n()$flag
+    ## then change if condition to if(flag==2)
+    # if(input$country_LTpred == "Brazil" & input$state_LTpred %in% statesBR2rem) {
+    if(flag == 2){
+      updateSelectInput(session, "show_plotLT", choices = c(TRUE, FALSE), selected = FALSE)
+    } else{
+      updateSelectInput(session, "show_plotLT", choices = c(TRUE, FALSE), selected = TRUE)
+    }
+  })
 
-     
   
   ###################################################################
   
   ## OBSERVED DATA GRAPHS
   output$dailyMetrics = renderPlot_obs(
-    "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
+    varPrefix = "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
     legendPrefix="", yaxisTitle="Novos Casos por Dia/New Cases per Day")
   output$cumulatedMetrics = renderPlot_obs(
-    "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
+    varPrefix = "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
     legendPrefix="", yaxisTitle="Casos Acumulados/Cumulated Cases")
   
   ## SHORT TERM PREDICTION GRAPH
   output$STpred = renderPlot_STpred(
-    "Cum", legendPrefix = "", yaxisTitle = "Casos Acumulados/Cumulated Cases",
+    varPrefix = "Cum", legendPrefix = "", 
+    yaxisTitle = "Casos Acumulados/Cumulated Cases",
     input$pred_time
   )
   
   ## LONG TERM PREDICTION GRAPH
   output$LTpred = renderPlot_LTpred(
-    "New", legendPrefix = "", yaxisTitle = "Novos Casos por Dia/New Cases per Day")
+    varPrefix = "New", legendPrefix = "", 
+    yaxisTitle = "Novos Casos por Dia/New Cases per Day"
+  )
   
   
 }

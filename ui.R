@@ -3,6 +3,7 @@
 
 ## load packages
 library(shiny)
+library(shinyjs)
 library(plotly)
 library(shinythemes)
 library(shinycssloaders)
@@ -16,6 +17,7 @@ shinyUI(
     ## Include Google Analytics
     tags$head(includeHTML(("google-analytics.html"))),
     
+    useShinyjs(), ## DOUGLAS
     ## título
     titlePanel(
       div(column(width = 9, h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
@@ -49,7 +51,7 @@ shinyUI(
       ## 1a aba
       tabPanel(
         title = HTML("<b>Dados</b>/<br>Data"),
-        
+
         sidebarLayout(
           ## painel lateral - input
           sidebarPanel(
@@ -67,7 +69,7 @@ shinyUI(
                           label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
           ),
-          
+
           ## painel principal - output (gráficos)
           mainPanel(
             uiOutput("plotTitle_daily"),
@@ -77,19 +79,24 @@ shinyUI(
             withSpinner(
               plotlyOutput("cumulatedMetrics"))
           )
-          
+
         )
       ),
-      
+
       ## 2a aba
       tabPanel(
         title = HTML("<b>Previsão Curto Prazo</b>/<br>Short term Prediction"),
-        
+
         sidebarLayout(
           ## painel lateral - input
           sidebarPanel(
             selectizeInput("country_STpred", label=h5("País/Country"), choices=NULL, width="100%"),
             selectizeInput("state_STpred", label=h5("Estado/State"), choices=NULL, width="100%"),
+            radioButtons("metrics_ST", label=h5("Casos/Cases"),
+                         choices=c("Confirmados/Confirmed" = "Confirmed",
+                                   "Mortes/Deaths" = "Deaths" ),
+                         selected="Confirmed",
+                         width="100%"),
             sliderInput("pred_time",
                         label="Janela de previsão (em dias)/Prediction window (in days)",
                         # min=1, max=14, value=7 ),
@@ -98,7 +105,7 @@ shinyUI(
                           label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
           ),
-          
+
           ## painel principal - output (gráficos)
           mainPanel(
             # h5("Em desenvolvimento/Under development"),
@@ -106,8 +113,8 @@ shinyUI(
             uiOutput("plotTitle"),
             withSpinner( # add spinner while loading
               plotlyOutput("STpred"))  # gráfico previsão curto prazo
-          )
-          
+          )  
+
         )
       ),
       
@@ -118,8 +125,13 @@ shinyUI(
         sidebarLayout(
           ## painel lateral - input
           sidebarPanel(
-            selectizeInput("country_LTpred", label=h5("País/Country"), choices=NULL, width="100%"),
-            selectizeInput("state_LTpred", label=h5("Estado/State"), choices=NULL, width="100%"),
+            selectizeInput("country_LTpred", label=h5("País/Country"), choices="Brazil", selected="Brazil", width="100%"),
+            selectizeInput("state_LTpred", label=h5("Estado/State"), choices="<all>", selected="<all>", width="100%"),
+            radioButtons("metrics_LT", label=h5("Casos/Cases"),
+                         choices=c("Confirmados/Confirmed" = "Confirmed",
+                                   "Mortes/Deaths" = "Deaths" ),
+                         selected="Confirmed",
+                         width="100%"),
             checkboxInput("scale_LTpred", value=FALSE, width="100%",
                           label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
@@ -127,15 +139,20 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
-            # h5("Em desenvolvimento/Under development") # ,
-            #   # h5("\n"),
             uiOutput("plotTitle_LT"),
-            withSpinner( # add spinner while loading
-              # if(output.plotLT_ok == TRUE){
-                plotlyOutput("LTpred")  # gráfico previsão curto prazo
-              # }else{
-                # h5("Resultados não disponíveis/Results not available")
-              # }
+            ## condition to hide/show plot depending on the flag
+            shinyjs::hidden(selectInput(inputId = "show_plotLT", label = "",               
+                                        choices = c(TRUE, FALSE), selected = TRUE)          
+                            ),
+            conditionalPanel("input.show_plotLT == 'TRUE'",       
+                             withSpinner( # add spinner while loading
+                               plotlyOutput("LTpred")  # gráfico previsão longo prazo
+                             )
+            ),
+            conditionalPanel("input.show_plotLT == 'FALSE'",     
+                             div(style= 'text-align:left; font-size:15px;
+                                  font-family:"Open Sans",arial,sans-serif', # font-weight:bold',
+                                 "Resultados não disponíveis/Results not available")
             )
           )
         )
@@ -163,7 +180,6 @@ shinyUI(
             h3("Contato/Contact:"),
             tags$a(href="mailto:danig@ufmg.br", "danig@ufmg.br"),
             h3("Equipe/Team:"),
-<<<<<<< HEAD
             p("Prof. Dani Gamerman - coordenador",br(),
               "Prof. Marcos Prates",br(),
               "Profa. Thaís Paiva",br(),
@@ -184,25 +200,20 @@ shinyUI(
               "Vitor Faria de Carvalho Oliveira"),
             div(tags$b("Doutora:"),br(),
               "Juliana Freitas De Mello E Silva")
-=======
-            p("Prof. Dani Gamerman - coordenador"), #(DEST/UFMG)")
-            p("Prof. Marcos Prates"),
-            p("Profa. Thaís Paiva"),
-            p("Prof. Vinícius Mayrink")
->>>>>>> 82977de5c3e32e6819c4278d40e7f0b065c4373e
           ),
           
           ## painel principal 
           mainPanel(
-            # h3("Sobre o projeto"),
-            # p(),
-            h3("Mídia"),
+            h3("Sobre o projeto/About the project:"),
+            p("Esse aplicativo é o resultado de um trabalho conjunto de professores e alunos de pós-graduação em Estatística da UFMG. Ele teve origem como um desafio em uma disciplina de pós-graduação após a suspensão das aulas devido à Covid19."),
+            p("Na configuração atual, o aplicativo tem 2 principais tipos de resultado:",tags$b("previsões de curto prazo e de longo prazo.")," O primeiro se refere a previsões de mortes e número de casos confirmados para o futuro imediato (até 1 a 2 semanas). O segundo tipo de previsões é mais abrangente e visa traçar um panorama mais completo da pandemia: quando o número de casos deixará de crescer e começará a decair? quantas pessoas essa pandemia irá adoecer? quando podemos esperar que a pandemia seja encerrada?"),
+            p(tags$b("Nossas previsões são atualizadas diariamente"),", e podem se alterar com base nos novos dados que chegam todo dia. As previsões são acompanhadas dos respectivos intervalos de probabilidade (ou credibilidade, no jargão estatístico) para que o usuário tenha sempre noção da verdadeira incerteza associada a cada previsão fornecida. Outro ponto importante é que essas previsões são sempre baseadas na manutenção das condições no dia em que a previsão foi feita, incluindo as condições de isolamento. Alterações podem causar mudanças substanciais nas previsões."),
+            p("Para mais informações, veja a aba de Fundamentação Teórica e acesse ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
+            h3("Na mídia/In the news:"),
             p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia"))
           )
-            
         )
       )
-      
     )
   )
 )
