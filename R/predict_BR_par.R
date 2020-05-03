@@ -26,7 +26,7 @@ covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE
          d_new = obitos.novos) %>%
   mutate(date = as.Date(date)) %>%
   select(date, n, d, n_new, d_new, state) %>%
-  arrange(state,date) %>% filter(date>'2020-02-01')
+  arrange(state,date) %>% filter(date>='2020-02-01')
 
 covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
   mutate(state = 'BR') %>%
@@ -37,7 +37,7 @@ covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE,
          d_new = obitos.novos) %>%
   mutate(date = as.Date(date)) %>%
   select(date, n, d, n_new, d_new, state) %>%
-  arrange(date) %>% filter(date>'2020-02-01')
+  arrange(date) %>% filter(date>='2020-02-01')
 
 covid19 <- bind_rows(covid19uf,covid19br)
 uf <- distinct(covid19,state)

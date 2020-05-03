@@ -49,7 +49,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
               d = sum(deaths, na.rm=T),
               n_new = sum(confirmed_new, na.rm=T),
               d_new = sum(deaths_new, na.rm=T)) %>%
-              arrange(date) %>% filter(date>'2020-02-01')
+              arrange(date) %>% filter(date>='2020-02-01')
    
 # covid_country %>% print(n=Inf)
 
