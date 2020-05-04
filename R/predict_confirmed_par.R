@@ -78,7 +78,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   #use static to provide initial values
   params = c("a","b","c","f","yfut","mu")
   nc = 1 # 3
-  nb = 50e3 # 5e4
+  nb = 90e3 # 5e4
   thin = 10
   ni = 10e3 # 5e4
   data_jags = list(y=Y[[i]], t=t, L=L)
@@ -114,53 +114,75 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
     #longterm
       L0 = 200
-
+  
       #acha a curva de quantil 
       lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
       medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
       highquant <- colQuantiles(mod_chain_y[,1:L0], prob=.975)
 
+      NTC25 =sum(lowquant)+Y[[2]][t]
+      NTC500=sum(medquant)+Y[[2]][t]
+      NTC975=sum(highquant)+Y[[2]][t]
+
+
+      ##flag
+      cm <- 5000000
+      ch <- 15000000
+      flag <- 0 #tudo bem
+      {if(NTC500 > cm) flag <- 2 #nao plotar
+      else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
+
       #vetor de data futuras e pega a posicao do maximo do percentil 25.
       dat.vec <- as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01")
       dat.full <- c(Y[[1]],dat.vec)
 
-      #definicao do pico usando a curva das medias
-      mod_chain_mu = as.matrix(mod_chain[mu_pos])
-      mu25 <- apply(mod_chain_mu,2,quantile, probs=0.025)
-      mu50 <- apply(mod_chain_mu,2,quantile, probs=0.5)
-      mu975 <- apply(mod_chain_mu,2,quantile, probs=.975)
-
-      posMax.q25 <- which.max(mu25[1:L0]) 
-      aux <- mu975 - mu25[posMax.q25]      
-      aux2 <- aux[posMax.q25:L0]
-      val <- min(aux2[aux2>0]) 
-      dat.max <- which(aux == val)
 
       Dat25 <- Dat500 <- Dat975 <- NULL
+      dat.low.end <- dat.med.end <- dat.high.end <- NULL
 
-      Dat25 <- dat.full[posMax.q25]
-      Dat500 <- dat.full[which.max(mu50[1:L0])]
-      Dat975 <- dat.full[dat.max]
+      mod_chain_mu = as.matrix(mod_chain[mu_pos])
+      mu50 <- apply(mod_chain_mu,2,quantile, probs=0.5)
+      Dat500 <- dat.full[which.max(mu50[1:(t+L0)])]
 
-      #calcula o fim da pandemia
       q <- .99
-      low.cum <- c(lowquant[1]+Y[[2]][t],lowquant[2:length(lowquant)])
-      low.cum <- colCumsums(as.matrix(low.cum))
-      low.cum <- low.cum/low.cum[length(low.cum)]
-      low.end <- which(low.cum - q > 0)[1]
-      dat.low.end <- dat.vec[low.end]
-
       med.cum <- c(medquant[1]+Y[[2]][t],medquant[2:length(medquant)])
       med.cum <- colCumsums(as.matrix(med.cum))
       med.cum <- med.cum/med.cum[length(med.cum)]
       med.end <- which(med.cum - q > 0)[1]
       dat.med.end <- dat.vec[med.end]
+      
+      if(flag == 0){
+         #definicao do pico usando a curva das medias
+         mu25 <- apply(mod_chain_mu,2,quantile, probs=0.025)
+         mu975 <- apply(mod_chain_mu,2,quantile, probs=.975)
 
-      high.cum <- c(highquant[1]+Y[[2]][t],highquant[2:length(highquant)])
-      high.cum <- colCumsums(as.matrix(high.cum))
-      high.cum <- high.cum/high.cum[length(high.cum)]
-      high.end <- which(high.cum - q > 0)[1]
-      dat.high.end <- dat.vec[high.end]
+         posMax.q25 <- which.max(mu25[1:(t+L0)]) 
+         aux <- mu975 - mu25[posMax.q25]
+         aux2 <- aux[posMax.q25:(t+L0)]
+         val <- min(aux2[aux2>0]) 
+         dat.max <- which(aux == val)
+
+         aux <- mu975 - mu25[posMax.q25]
+         aux2 <- aux[1:posMax.q25]
+         val <- min(aux2[aux2>0]) 
+         dat.min <- which(aux == val)
+
+         Dat25 <- dat.full[dat.min]
+         Dat975 <- dat.full[dat.max]
+
+         #calcula o fim da pandemia
+         low.cum <- c(lowquant[1]+Y[[2]][t],lowquant[2:length(lowquant)])
+         low.cum <- colCumsums(as.matrix(low.cum))
+         low.cum <- low.cum/low.cum[length(low.cum)]
+         low.end <- which(low.cum - q > 0)[1]
+         dat.low.end <- dat.vec[low.end]
+
+         high.cum <- c(highquant[1]+Y[[2]][t],highquant[2:length(highquant)])
+         high.cum <- colCumsums(as.matrix(high.cum))
+         high.cum <- high.cum/high.cum[length(high.cum)]
+         high.end <- which(high.cum - q > 0)[1]
+         dat.high.end <- dat.vec[high.end]
+      }
 
       lt_predict <- data.frame( date = dat.vec,
                               q25  = lowquant,
@@ -169,25 +191,19 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
                               m    = colMeans(mod_chain_y[,1:L0]))     
       row.names(lt_predict) <- NULL
 
-      lt_summary <- list(NTC25 =sum(lowquant)+Y[[2]][t],
-                            NTC500=sum(medquant)+Y[[2]][t],
-                            NTC975=sum(highquant)+Y[[2]][t],
-                            high.dat.low=Dat25,
-                            high.dat.med=Dat500,
-                            high.dat.upper=Dat975,
-			    end.dat.low = dat.low.end,
-			    end.dat.med = dat.med.end,
-			    end.dat.upper = dat.high.end)
+      lt_summary <- list(NTC25=NTC25,
+			 NTC500=NTC500,
+			 NTC975=NTC975,
+                         high.dat.low=Dat25,
+                         high.dat.med=Dat500,
+                         high.dat.upper=Dat975,
+			 end.dat.low = dat.low.end,
+			 end.dat.med = dat.med.end,
+			 end.dat.upper = dat.high.end)
+         
 
-      ##flag
-      cm <- 10000000
-      ch <- 50000000
-      flag <- 0 #tudo bem
-      {if(lt_summary$NTC500 > cm) flag <- 2 #nao plotar
-      else{if(lt_summary$NTC975 > ch) flag <- 1}} #plotar so mediana
-
-      list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
-      name.to.save <- gsub(" ", "-", country_name)
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag) 
+    name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS
          results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
