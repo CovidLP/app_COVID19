@@ -27,7 +27,8 @@ minutesSinceLastUpdate = function(fileName) {
 ## function to format the dates for better plotting
 printDate = function(date){
   # paste0(day(date),"/",month(date, lab=T, locale="us"))
-  paste0(day(date),"/",month(date, lab=T))
+  monthsEn=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+  paste0(day(date),"/",monthsEn[month(date)])
 }
 
 ##############################################################################
@@ -137,17 +138,9 @@ statesBR_STpred = sort(statesBR_STpred)
 #############################################
 ## list of countries for LONG TERM prediction
 countries_LTpred_orig = countries_STpred_orig
-# ## REMOVE SWITZERLAND 
-# countries_LTpred_orig = countries_LTpred_orig[-which(countries_LTpred_orig=="Switzerland")]
 
 ## list of Brazil's states - LONG TERM
 statesBR_LTpred = statesBR_STpred
-# ## REMOVE AC, AL, SC and more
-statesBR2rem = c("AC", "AL", "SC",
-                 "PB", "PI", "RN",
-                 "RR", "SE", "TO")
-# # statesBR_LTpred = statesBR_LTpred[-which(statesBR_LTpred%in%statesBR2rem)]
-
 
 ## read RDS files from github repository
 githubURL = "https://github.com/thaispaiva/app_COVID19/raw/master/STpredictions"
@@ -664,6 +657,16 @@ server = function(input, output, session) {
                          Confirmed="Confirmed Cases")
       
       plt = plt %>%
+        ## add mu line
+        add_trace(
+          x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))],
+              pred_n$date),
+          y=c(mu_plot),
+          type='scatter', mode='lines', hoverinfo="none", # "x+y",
+          # name=paste("Previsão", metric_pt, "Prediction"),
+          name=paste(metric_pt, "Estimated Mean"),
+          line=list(color='rgb(230,115,0)', dash='solid', width=2.5)
+        ) %>%
         ## add lines for observed data
         add_trace(
           x=data$date[which(data$date<=last_date_n)],#[-c(1:30)], # removing 1st 30 days
@@ -672,10 +675,10 @@ server = function(input, output, session) {
           name=metric_pt,
           marker=list(
             color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
-            line=list(color='rgb(8,48,107)', width=1.0)
+            line=list(color='rgb(8,48,107)', width=1.0)),
+          line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'), width=2.0)
             # line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
             #           width=1.0)
-          )
         ) # %>%
       if(flag!=1){
         plt = plt %>%
@@ -713,7 +716,7 @@ server = function(input, output, session) {
       plt = plt %>%
         ## add median of prediction
         add_trace(
-          # x=c(data$date[-c(1:(length(data$date)-length(mu_plot)))], # plot median for all data
+          # x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))], # plot median for all data
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
               pred_n$date),
           # y=c(mu_plot,
@@ -723,7 +726,7 @@ server = function(input, output, session) {
           # name=paste("Previsão", metric_pt, "Prediction"),
           name=paste(metric_pt, "Prediction"),
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
-        )
+        ) 
       plt
     })
   }
