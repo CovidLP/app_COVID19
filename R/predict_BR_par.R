@@ -122,12 +122,12 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 
       ##flag
       {if(s == 28){
-        cm <- 800000
+        cm <- 8000000
         ch <- 1000000
       }
       else{
-        cm <- 10000
-        ch <- 15000
+        cm <- 300000
+        ch <- 500000
       }}
       flag <- 0 #tudo bem
       {if(NTC500 > cm) flag <- 2 #nao plotar
