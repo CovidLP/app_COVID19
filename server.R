@@ -14,8 +14,7 @@ library(lubridate)
 ##############################################################################
 
 ## define font to be used later
-f1 = list(#family="Courier New, monospace",
-          family="Arial", 
+f1 = list(family="Arial",
           size=10,color="rgb(30,30,30)")
 
 ## function to measure how old a file is
@@ -30,6 +29,13 @@ printDate = function(date){
   monthsEn=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
   paste0(day(date),"/",monthsEn[month(date)])
 }
+
+## colors for observed data
+blu = 'rgb(100,140,240)'
+dblu = 'rgb(0,0,102)'
+red = 'rgb(200,30,30)'
+dred = 'rgb(100,30,30)'
+
 
 ##############################################################################
 
@@ -155,7 +161,8 @@ server = function(input, output, session) {
   
   ## add message on startup
   showModal(modalDialog(
-    "Caso esteja acessando pelo celular, o aplicativo é melhor visualizado com o aparelho na horizontal.",
+    div(p("Caso esteja acessando pelo celular, o aplicativo é melhor visualizado com o aparelho na horizontal"),#tags$br,
+        p("If you are on mobile, the application is best viewed with the device on horizontal.")),
     easyClose = T,
     footer = tagList(
       modalButton("Ok")
@@ -415,7 +422,7 @@ server = function(input, output, session) {
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
-          legend=list(x=0.1,y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.03,y=0.97,bgcolor='rgba(240,240,240,0.5)'),
           font=f1
         )
       
@@ -431,14 +438,12 @@ server = function(input, output, session) {
             type='scatter', mode='lines+markers', hoverinfo="x+y",
             name= metric_pt,
             marker=list(
-              color=switch(metric,Deaths='rgb(200,30,30)', # Recovered='rgb(30,200,30)',
-                           Confirmed='rgb(100,140,240)'),
-              line=list(color='rgb(8,48,107)', width=1.0)
-              # line=list(color=switch(metric,Deaths='rgb(200,30,30)', # Recovered='rgb(30,200,30)',
-              #                        Confirmed='rgb(100,140,240)'),
-              #           width=1.0)
+              color = switch(metric, Deaths=red, Confirmed=blu),
+              line=list(color = switch(metric, Deaths=dred, Confirmed=dblu),width=1)),
+            line=list(
+              color = switch(metric, Deaths=dred, Confirmed=blu),
+              width=1.5)
             )
-          )
       }
       plt
     })
@@ -471,44 +476,41 @@ server = function(input, output, session) {
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
       
+      # varPrefix = "Cum"; legendPrefix = ""
+      metric = input$metrics_ST
+      metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases") 
+      ## portuguese labels for legend
+      metric_pt = switch(metric, Deaths="Mortes/Deaths",
+                         Confirmed="Casos Confirmados/Confirmed Cases")
+      
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        # config(displayModeBar=FALSE) %>%
         plotly::config(displayModeBar=TRUE) %>%
         layout(
           ## title of ST pred graph
           title = list(
-            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
-                        "<br>Em desenvolvimento/Under development"),
-            xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y")),
+                        # "<br>Em desenvolvimento/Under development"),
+            font=f1,
+            xanchor="left", x=0), # font=list(family="Arial",size=12)), # y=1, yanchor="top"),
           xaxis=list(
             title="",
             tickangle=-90, #type='category',
             ## add pred dates to the x axis
-            # ticktext=as.list(c(data$dateStr[which(data$date<=last_date_n)][-c(1:30)], 
-            # pred_dateStr)),                         # removing 1st 30 days
-            # tickvals=as.list(c(data$date[which(data$date<=last_date_n)][-c(1:30)], 
-            # pred_n$date)),
             tick0=data$dateStr[31],dtick=7*86400000, # add ticks every week
             tickformat="%d/%b"
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"), 
-          legend=list(x=0.1, y=0.9,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.03, y=0.97,bgcolor='rgba(240,240,240,0.5)',
+                      font=f1,
+                      title=list(text=paste0("<b>",metric_leg,"</b>"))),
           font=f1,
           # add vertical line on last observed day
-          shapes=list(type="line", opacity=0.7, line=list(color="grey", width=1),
+          shapes=list(type="line", opacity=0.7, line=list(color="black", width=1),
                       y0=0, y1=1, yref="paper",
                       x0=last_date_n, x1=last_date_n)
         )
-      
-      # varPrefix = "Cum"; legendPrefix = ""
-      # metric = "Confirmed"; 
-      metric = input$metrics_ST
-      ## portuguese labels for legend
-      metric_pt = switch(metric, Deaths="Mortes/Deaths",
-                         Recovered="Recuperados/Recovered Cases",
-                         Confirmed="Casos Confirmados/Confirmed Cases")
       
       plt = plt %>%
         ## add lines for observed data
@@ -516,13 +518,14 @@ server = function(input, output, session) {
           x=data$date[which(data$date<=last_date_n)][-c(1:30)], # removing 1st 30 days
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)][-c(1:30)], 
           type='scatter', mode='lines+markers', hoverinfo="x+y", 
-          name=metric_pt,
+          # name=metric_pt,
+          name="Observed Data",
           marker=list(
-            color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
-            line=list(color='rgb(8,48,107)', width=1.0)
-            # line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
-            #           width=1.0)
-          )
+            color = switch(metric, Deaths=red, Confirmed=blu),
+            line=list(color = switch(metric, Deaths=dred, Confirmed=dblu),width=1)),
+          line=list(
+            color = switch(metric, Deaths=dred, Confirmed=blu),
+            width=1.5)
         ) %>% 
         ## add 2,5% and 97,5% quantiles
         add_trace(
@@ -531,7 +534,8 @@ server = function(input, output, session) {
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               pred_n$q25[1:input$pred_time]),
           showlegend=F,
-          name=paste("95% IC - ",metric_pt,"CI"),
+          # name=paste("95% IC - ",metric_pt,"CI"),
+          name = "95% CI",
           type='scatter', #mode = 'none',
           mode='lines', hoverinfo="x+y", 
           fillcolor='rgba(150,150,150,0.5)',
@@ -546,7 +550,8 @@ server = function(input, output, session) {
           mode='lines', hoverinfo="x+y", 
           fill='tonexty',
           # showlegend=F,
-          name=paste("95% IC - ",metric_pt,"CI"),
+          # name=paste("95% IC - ",metric_pt,"CI"),
+          name = "95% CI",
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0)# , dash='dot')
         ) %>%
@@ -557,7 +562,8 @@ server = function(input, output, session) {
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               pred_n$med[1:input$pred_time]),
           type='scatter', mode='lines+markers', hoverinfo="x+y", 
-          name=paste("Previsão", metric_pt, "Prediction"),
+          # name=paste("Previsão", metric_pt, "Prediction"),
+          name="Prediction",
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
         )
       plt
@@ -568,9 +574,12 @@ server = function(input, output, session) {
   output$plotTitle <- renderUI({
     title = paste0(input$country_STpred,
                    ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
-    div(style='text-align:center; font-size:15px;
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        title)
+    metric = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed Cases",
+                    "Mortes/Deaths")
+    div(style= 'text-align:center; font-size:15px;
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold',
+        metric, " - ",title
+    )
   })
   
   #########################
@@ -578,59 +587,58 @@ server = function(input, output, session) {
   renderPlot_LTpred = function(varPrefix, legendPrefix, yaxisTitle) {
     ## plotly function for interactive plot
     renderPlotly({
+      ## load observed data based on inpu
       data = data_predLT()
       if(nrow(data) == 0) return(NULL) ## DOUGLAS
-      # pred_n = predLT_n()
+      ## load prediction data
       aux = predLT_n()
       pred_n = aux$lt_predict
       pred_summary = aux$lt_summary
       mu_plot = aux$mu_plot
       flag = aux$flag
 
-      ## create last date and format dates for prediction
+      ## create last date, and format dates for prediction
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
       
       # varPrefix = "New"; legendPrefix = ""
       metric = input$metrics_LT
       metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases") 
+      ## portuguese labels for legend
+      metric_pt = switch(metric, Deaths="Deaths", #Deaths="Mortes/Deaths",
+                         Confirmed="Confirmed Cases") # Confirmed="Casos Confirmados/Confirmed Cases")
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        # config(displayModeBar=FALSE) %>%
         plotly::config(displayModeBar=TRUE ) %>% #, locale='pt-br') %>%
         layout(
           title = list(
-            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y"),
-                        "<br>Em desenvolvimento/Under development"),
-            xanchor="left", x=0, font=list(family="Arial",size=12)), # y=1, yanchor="top"),
-          annotations = list(text = paste0(ifelse(is.null(pred_summary$high.dat.med), "",
-                                                  paste0("<b>Estimated peak 95% CI:</b> (",
-                                                         printDate(pred_summary$high.dat.low),
-                                                         # format(pred_summary$high.dat.low,form="%d/%b"),
-                                                         ", ",
-                                                         printDate(pred_summary$high.dat.upper),
-                                                         # format(pred_summary$high.dat.upper,form="%d/%b"),
-                                                         ")<br>")),
-                                           "<b>Total Number of ",metric_leg,":</b> ",
+          text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y") ),
+                      # "<br>Em desenvolvimento/Under development"),
+          font=f1,
+          xanchor="left", x=0 ), #font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+          annotations = list(text = paste0("<span style=\"line-height: 40px;\">",
+                                            "<b>Peak 95% CI:</b> ",
+                                           ifelse(is.null(pred_summary$high.dat.low)|is.null(pred_summary$high.dat.upper),
+                                                  "NA",
+                                                  paste0("(", printDate(pred_summary$high.dat.low),", ",
+                                                         printDate(pred_summary$high.dat.upper), ")")),
+                                           "<br><b>Total Number of ",metric_leg,":</b> ",
                                            round(pred_summary$NTC500,0), "<br>",
-                                           ifelse(flag==1, "",
-                                                  paste0("<b>95% CI:</b> (", round(pred_summary$NTC25,0),
-                                                         ", ", round(pred_summary$NTC975,0),")<br>")),
-                                           "<b>End (99%) of the pandemic:</b> ",
+                                           "<b>95% CI:</b> ",
+                                           ifelse(flag==1, "NA",
+                                                  paste0("(", round(pred_summary$NTC25,0),
+                                                         ", ", round(pred_summary$NTC975,0),")")),
+                                           "<br><b>End (99%) of ",metric_leg,":</b> ",
                                            printDate(pred_summary$end.dat.med),
-                                           # format(pred_summary$end.dat.med, form="%d/%b"),
-                                           "<br><b>95% CI:</b> (",
-                                           printDate(pred_summary$end.dat.low),
-                                           # format(pred_summary$end.dat.low,form="%d/%b"),
-                                           ", ",
-                                           printDate(pred_summary$end.dat.upper),
-                                           # format(pred_summary$end.dat.upper,form="%d/%b"),
-                                           ")"
+                                           "<br><b>95% CI:</b> ",
+                                           ifelse(is.null(pred_summary$end.dat.low)|is.null(pred_summary$end.dat.upper),
+                                                  "NA",
+                                                  paste0("(", printDate(pred_summary$end.dat.low),", ",
+                                                         printDate(pred_summary$end.dat.upper),")" ) ),
+                                           "</span>"
                                            ),
-                             # x=max(pred_n$date), y=1, yref="paper",
-                             x = 0.99, y = 0.95, xref="paper", yref="paper",
-                             # y=0.9*max(c(unlist(data[[paste0(varPrefix, metric)]]),max(pred_n[,-1]))),
+                             x = 0.97, y = 0.97, xref="paper", yref="paper",
                              font=list(family="Arial",size=10), align="right",
                              showarrow=FALSE),
           xaxis=list(
@@ -642,19 +650,23 @@ server = function(input, output, session) {
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
-          legend=list(x=0.01, y=0.95,bgcolor='rgba(240,240,240,0.5)'),
+          legend=list(x=0.03, y=0.97,bgcolor='rgba(240,240,240,0.5)',
+                      font=list(family="Arial",size=10),
+                      title=list(text=paste0("<b>",metric_pt,"</b>"))),
           font=f1,
           # add vertical line on last observed day
           shapes=list(type="line", opacity=0.7, line=list(color="black", width=1),
                       y0=0, y1=1, yref="paper",
-                      x0=last_date_n, x1=last_date_n)
-        )
+                      x0=last_date_n, x1=last_date_n),
+          # margin
+          modebar = list(orientation = "v")
+        ) #%>%
+        # add_annotations(text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y")),
+        #                 x = 0.99, y = 0.1, xref="paper", yref="paper",
+        #                 font=list(family="Arial",size=12), align="right",
+        #                 showarrow=FALSE)
       
-      ## portuguese labels for legend
-      metric_pt = switch(metric, Deaths="Deaths", #Deaths="Mortes/Deaths",
-                         Recovered="Recuperados/Recovered Cases",
-                         # Confirmed="Casos Confirmados/Confirmed Cases")
-                         Confirmed="Confirmed Cases")
+
       
       plt = plt %>%
         ## add mu line
@@ -663,8 +675,8 @@ server = function(input, output, session) {
               pred_n$date),
           y=c(mu_plot),
           type='scatter', mode='lines', hoverinfo="none", # "x+y",
-          # name=paste("Previsão", metric_pt, "Prediction"),
-          name=paste(metric_pt, "Estimated Mean"),
+          # name=paste(metric_pt, "Estimated Mean"),
+          name=("Estimated Mean"),
           line=list(color='rgb(230,115,0)', dash='solid', width=2.5)
         ) %>%
         ## add lines for observed data
@@ -672,14 +684,14 @@ server = function(input, output, session) {
           x=data$date[which(data$date<=last_date_n)],#[-c(1:30)], # removing 1st 30 days
           y=data[[paste0(varPrefix, metric)]][which(data$date<=last_date_n)],#[-c(1:30)], 
           type='scatter', mode='lines+markers', hoverinfo="x+y",
-          name=metric_pt,
+          name="Observed Data",
           marker=list(
-            color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
-            line=list(color='rgb(8,48,107)', width=1.0)),
-          line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'), width=2.0)
-            # line=list(color=switch(metric,Deaths='rgb(200,30,30)', Confirmed='rgb(100,140,240)'),
-            #           width=1.0)
-        ) # %>%
+            color = switch(metric, Deaths=red, Confirmed=blu),
+            line=list(color = switch(metric, Deaths=dred, Confirmed=dblu),width=1)),
+          line=list(
+            color = switch(metric, Deaths=dred, Confirmed=blu),
+            width=1.5)
+        )
       if(flag!=1){
         plt = plt %>%
         ## add 2,5% and 97,5% quantiles
@@ -689,8 +701,8 @@ server = function(input, output, session) {
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               pred_n$q25),
           showlegend=F,
-          # name=paste("95% IC - ",metric_pt,"CI"),
-          name=paste("95% CI - ",metric_pt),
+          # name=paste("95% CI - ",metric_pt),
+          name="95% CI",
           type='scatter', #mode = 'none',
           mode='lines', hoverinfo="x+y",
           fillcolor='rgba(150,150,150,0.5)',
@@ -706,9 +718,8 @@ server = function(input, output, session) {
           type='scatter', #mode = 'none',
           mode='lines', hoverinfo="x+y",
           fill='tonexty',
-          # showlegend=F,
-          # name=paste("95% IC - ",metric_pt,"CI"),
-          name=paste("95% CI - ",metric_pt),
+          # name=paste("95% CI - ",metric_pt),
+          name="95% CI",
           fillcolor='rgba(150,150,150,0.5)',
           line=list(color='rgba(0,0,0,1)', width=0)# , dash='dot')
         )
@@ -716,15 +727,13 @@ server = function(input, output, session) {
       plt = plt %>%
         ## add median of prediction
         add_trace(
-          # x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))], # plot median for all data
           x=c(data$date[which(data$date==last_date_n)], # to connect with last observed point
               pred_n$date),
-          # y=c(mu_plot,
           y=c(data[[paste0(varPrefix, metric)]][which(data$date==last_date_n)],
               pred_n$med),
           type='scatter', mode='lines+markers', hoverinfo="x+y",
-          # name=paste("Previsão", metric_pt, "Prediction"),
-          name=paste(metric_pt, "Prediction"),
+          # name=paste(metric_pt, "Prediction"),
+          name="Prediction",
           marker=list(color='rgb(0,0,0)', size=4), line=list(color='rgb(0,0,0)', dash='dot')
         ) 
       plt
@@ -735,9 +744,12 @@ server = function(input, output, session) {
   output$plotTitle_LT <- renderUI({
     title = paste0(input$country_LTpred,
                    ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
+    metric = ifelse(input$metrics_LT == "Confirmed", "Casos confirmados/Confirmed Cases",
+                    "Mortes/Deaths")
     div(style= 'text-align:center; font-size:15px;
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        title)
+        font-family:"Open Sans",arial,sans-serif; font-weight:bold',
+        metric, " - ",title
+    )
   })
   
 

@@ -108,8 +108,7 @@ shinyUI(
 
           ## painel principal - output (gráficos)
           mainPanel(
-            # h5("Em desenvolvimento/Under development"),
-            # h5("\n"),
+            p("Em desenvolvimento/Under development", style="font-size:80%;"),
             uiOutput("plotTitle"),
             withSpinner( # add spinner while loading
               plotlyOutput("STpred"))  # gráfico previsão curto prazo
@@ -139,6 +138,7 @@ shinyUI(
           
           ## painel principal - output (gráficos)
           mainPanel(
+            p("Em desenvolvimento/Under development", style="font-size:80%;"), # font-family:arial"),
             uiOutput("plotTitle_LT"),
             ## condition to hide/show plot depending on the flag
             shinyjs::hidden(selectInput(inputId = "show_plotLT", label = "",               
@@ -210,6 +210,7 @@ shinyUI(
             p(tags$b("Nossas previsões são atualizadas diariamente"),", e podem se alterar com base nos novos dados que chegam todo dia. As previsões são acompanhadas dos respectivos intervalos de probabilidade (ou credibilidade, no jargão estatístico) para que o usuário tenha sempre noção da verdadeira incerteza associada a cada previsão fornecida. Outro ponto importante é que essas previsões são sempre baseadas na manutenção das condições no dia em que a previsão foi feita, incluindo as condições de isolamento. Alterações podem causar mudanças substanciais nas previsões."),
             p("Para mais informações, veja a aba de Fundamentação Teórica e acesse ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
             h3("Na mídia/In the news:"),
+            p("04/05/2020 - ",a(href="https://www.hojeemdia.com.br/primeiro-plano/estudo-da-ufmg-projeta-pico-de-casos-da-covid-19-no-brasil-para-o-dia-18-deste-m%C3%AAs-1.785365", "Matéria no Jornal Hoje em Dia")),
             p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia"))
           )
         )
