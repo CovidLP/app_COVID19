@@ -44,7 +44,7 @@ shinyUI(
       
       ## Nome do app
       # "Previsão de curto e longo prazo para COVID-19", # sigla?
-      " ",
+      "CovidLP",
       
       ########################################
 
@@ -55,15 +55,15 @@ shinyUI(
         sidebarLayout(
           ## painel lateral - input
           sidebarPanel(
-            selectizeInput("country", label=h5("País/Country"), choices=NULL, width="100%"),
-            selectizeInput("state", label=h5("Estado/State"), choices=NULL, width="100%"),
+            selectizeInput("country", label=h5("País/Country"), choices="Brazil",selected="Brazil",width="100%"),
+                           # choices=NULL, width="100%"),
+            selectizeInput("state", label=h5("Estado/State"), choices="<all>", selected="<all>",width="100%"),
+                           # choices=NULL, width="100%"),
             checkboxGroupInput("metrics", label=h5("Casos/Cases"),
                                choices=c("Confirmados/Confirmed" = "Confirmed",
                                          "Mortes/Deaths" = "Deaths" ), #,
                                          # "Recuperados/Recovered" = "Recovered"),
                                selected=c("Confirmed","Deaths"), #,"Recovered"),
-                               # choices=c("Confirmed","Deaths","Recovered"),
-                               # selected=c("Confirmed","Deaths","Recovered"),
                                width="100%"),
             checkboxInput("scale", value=FALSE, width="100%",
                           label="Escala logarítmica/Log-scaled vertical axis"),
@@ -72,10 +72,12 @@ shinyUI(
 
           ## painel principal - output (gráficos)
           mainPanel(
-            uiOutput("plotTitle_daily"),
+            # uiOutput("plotTitle_daily"),
+            p("Novos casos/New cases:", style="text-align:left"),
             withSpinner( # add spinner while loading
               plotlyOutput("dailyMetrics")),
-            uiOutput("plotTitle_cum"),
+            # uiOutput("plotTitle_cum"),
+            p("Casos acumulados/Cumulated cases:", style="text-align:left"),
             withSpinner(
               plotlyOutput("cumulatedMetrics"))
           )
@@ -99,8 +101,8 @@ shinyUI(
                          width="100%"),
             sliderInput("pred_time",
                         label="Janela de previsão (em dias)/Prediction window (in days)",
-                        # min=1, max=14, value=7 ),
-                        min=1, max=7, value=7 ),
+                        min=1, max=14, value=7 ),
+                        # min=1, max=7, value=7 ),
             checkboxInput("scale_STpred", value=FALSE, width="100%",
                           label="Escala logarítmica/Log-scaled vertical axis"),
             width=3
@@ -109,7 +111,8 @@ shinyUI(
           ## painel principal - output (gráficos)
           mainPanel(
             p("Em desenvolvimento/Under development", style="font-size:80%;"),
-            uiOutput("plotTitle"),
+            # uiOutput("plotTitle"),
+            p("Previsão de casos acumulados/Prediction of cumulated cases:", style="text-align:left"),
             withSpinner( # add spinner while loading
               plotlyOutput("STpred"))  # gráfico previsão curto prazo
           )  
@@ -139,7 +142,8 @@ shinyUI(
           ## painel principal - output (gráficos)
           mainPanel(
             p("Em desenvolvimento/Under development", style="font-size:80%;"), # font-family:arial"),
-            uiOutput("plotTitle_LT"),
+            # uiOutput("plotTitle_LT"),
+            p("Previsão de novos casos/Prediction of new cases:", style="text-align:left"),
             ## condition to hide/show plot depending on the flag
             shinyjs::hidden(selectInput(inputId = "show_plotLT", label = "",               
                                         choices = c(TRUE, FALSE), selected = TRUE)          
@@ -184,7 +188,7 @@ shinyUI(
               "Prof. Marcos Prates",br(),
               "Profa. Thaís Paiva",br(),
               "Prof. Vinícius Mayrink"),
-            div(tags$b("Alunos do Programa de PG:"),br(),
+            div(tags$b("Discentes do Programa de PG:"),br(),
               "Ana Julia Alves Camara",br(),
               "Danna Lesley Cruz Reyes",br(),
               "Debora de Freitas Magalhaes",br(),
@@ -205,11 +209,17 @@ shinyUI(
           ## painel principal 
           mainPanel(
             h3("Sobre o projeto/About the project:"),
-            p("Esse aplicativo é o resultado de um trabalho conjunto de professores e alunos de pós-graduação em Estatística da UFMG. Ele teve origem como um desafio em uma disciplina de pós-graduação após a suspensão das aulas devido à Covid19."),
-            p("Na configuração atual, o aplicativo tem 2 principais tipos de resultado:",tags$b("previsões de curto prazo e de longo prazo.")," O primeiro se refere a previsões de mortes e número de casos confirmados para o futuro imediato (até 1 a 2 semanas). O segundo tipo de previsões é mais abrangente e visa traçar um panorama mais completo da pandemia: quando o número de casos deixará de crescer e começará a decair? quantas pessoas essa pandemia irá adoecer? quando podemos esperar que a pandemia seja encerrada?"),
-            p(tags$b("Nossas previsões são atualizadas diariamente"),", e podem se alterar com base nos novos dados que chegam todo dia. As previsões são acompanhadas dos respectivos intervalos de probabilidade (ou credibilidade, no jargão estatístico) para que o usuário tenha sempre noção da verdadeira incerteza associada a cada previsão fornecida. Outro ponto importante é que essas previsões são sempre baseadas na manutenção das condições no dia em que a previsão foi feita, incluindo as condições de isolamento. Alterações podem causar mudanças substanciais nas previsões."),
+            p("Esse aplicativo é o resultado de um trabalho conjunto de professores e alunas e alunos de pós-graduação em Estatística da UFMG. Ele teve origem como um desafio em uma disciplina de pós-graduação após a suspensão das aulas devido à Covid19."),
+            p("Na configuração atual, o aplicativo tem dois principais tipos de resultado:",tags$b("previsões de curto prazo e de longo prazo.")," O primeiro se refere a previsões de mortes e número de casos confirmados para o futuro imediato (até 1 a 2 semanas). O segundo tipo de previsões é mais abrangente e visa traçar um panorama mais completo da pandemia: quando o número de casos deixará de crescer e começará a decair? Quantas pessoas essa pandemia irá adoecer? Quando podemos esperar que a pandemia seja encerrada?"),
+            p(tags$b("Nossas previsões são atualizadas diariamente,"),"e podem se alterar com base nos novos dados que chegam todo dia. As previsões são acompanhadas dos respectivos intervalos de probabilidade (ou credibilidade, no jargão estatístico) para que o usuário tenha sempre noção da verdadeira incerteza associada a cada previsão fornecida. Outro ponto importante é que essas previsões são sempre baseadas na manutenção das condições no dia em que a previsão foi feita, incluindo as condições de isolamento. Alterações podem causar mudanças substanciais nas previsões."),
             p("Para mais informações, veja a aba de Fundamentação Teórica e acesse ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
+            br(), # ENGLISH VERSION
+            p("This application is the result of a joint work by professors and graduate students from the Statistics Department at UFMG. It originated as a challenge in a graduate course after the suspension of classes due to Covid19."),
+            p("In the current configuration, the application has two main types of results:",tags$b("short-term and long-term predictions.")," The first refers to prediction of number of deaths and confirmed cases for the immediate future (up to 1 to 2 weeks). The second type of forecast is more comprehensive and aims to provide a full picture of the pandemic: when will the number of cases stop growing and start to decline? How many people will get sick? When can we expect the pandemic to end?"),
+            p(tags$b("Our forecasts are updated daily,"),"and may change based on new data that arrives every day. The predictions are accompanied by the respective probability intervals (or credibility, in statistical jargon) so that the user is always aware of the true uncertainty associated with each forecast provided. Another important point is that the predictions are always based on the maintenance of conditions on the day the forecast was made, including isolation conditions. Changes on these conditions can cause substantial alterations on the predictions."),
+            p("For more information, check the Theoretical Foundation tab and access ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
             h3("Na mídia/In the news:"),
+            p("05/05/2020 - ",a(href="https://ufmg.br/comunicacao/noticias/aplicativos-projetam-infeccoes-e-mortes-pelo-coronavirus-em-longo-prazo", "Notícia no site da UFMG")),
             p("04/05/2020 - ",a(href="https://www.hojeemdia.com.br/primeiro-plano/estudo-da-ufmg-projeta-pico-de-casos-da-covid-19-no-brasil-para-o-dia-18-deste-m%C3%AAs-1.785365", "Matéria no Jornal Hoje em Dia")),
             p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia"))
           )

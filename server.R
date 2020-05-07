@@ -407,31 +407,52 @@ server = function(input, output, session) {
   renderPlot_obs = function(varPrefix, legendPrefix, yaxisTitle) {
     ## plotly function for interactive plot
     renderPlotly({
+      ## load observed data based on input
       data = data()
+      if(nrow(data) == 0) return(NULL) ## DOUGLAS
+      ## create last date
+      last_date_n = max(data$date)
+      
+      ## create title with country/state name
+      title = paste0(input$country,
+                     ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        plotly::config(displayModeBar=TRUE) %>%
+        plotly::config(displayModeBar=TRUE,  # include ModeBar
+                       displaylogo=FALSE,    # remove some buttons to simplify
+                       modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
+                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
         layout(
+          ## add country and state to title
+          title = list(text = paste0("<b>",title,"<b>")),
           ## add pred dates to the x axis
           xaxis=list(
-            title="", tickangle=-90, #type='category',
-            # ticktext=as.list(data$dateStr),
-            # tickvals=as.list(data$date)),
+            title="", tickangle=-90, 
             tick0=data$dateStr[1],dtick=7*86400000, # add ticks every week
             tickformat="%d/%b"
           ),
-          yaxis=list(title=yaxisTitle, type=if_else(input$scale==1,"log","linear"),
-                     hoverformat='.0f', hoverinfo="x+y"),
-          legend=list(x=0.03,y=0.97,bgcolor='rgba(240,240,240,0.5)'),
-          font=f1
-        )
+          yaxis=list(title=yaxisTitle, 
+                     type=if_else(input$scale==1,"log","linear"), # add option for log scale
+                     hoverformat='.0f', hoverinfo="x+y"), # show only date/value on hover
+          legend=list(x=0.03,y=0.97, # legend position
+                      bgcolor='rgba(240,240,240,0.5)'),
+          font=list(family="Arial",size=10),
+          dragmode = FALSE, # to avoid zoom when the graph starts
+          modebar = list(orientation = "v") # modebar orientation
+        ) %>%
+        ## add update date
+        add_annotations(text=paste0("Atualizado em/Updated on ",printDate(last_date_n)),
+                        x = 0.99, y = 0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE)
       
       ## after, add lines for each metric from input
       for(metric in input$metrics){
         ## portuguese labels for legend
         metric_pt = switch(metric, Deaths="Mortes/Deaths",
                            Recovered="Recuperados/Recovered Cases",
-                           Confirmed="Casos Confirmados/Confirmed Cases")
+                           Confirmed="Casos confirmados/Confirmed cases")
         plt = plt %>%
           add_trace(
             x=~date, y=data[[paste0(varPrefix, metric)]],
@@ -449,50 +470,57 @@ server = function(input, output, session) {
     })
   }
   
-  ## add title bar with country name - New Cases
-  output$plotTitle_daily <- renderUI({
-    title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
-    div(style='text-align:center; font-size:15px; 
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        "Novos Casos/New Cases - ",title)
-  })
-  
-  ## add title bar with country name - Cumulated Cases
-  output$plotTitle_cum <- renderUI({
-    title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
-    div(style= 'text-align:center; font-size:15px;
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-        "Casos Acumulados/Cumulated Cases - ",title)
-  })
+  # ## add title bar with country name - New Cases
+  # output$plotTitle_daily <- renderUI({
+  #   title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+  #   div(style='text-align:center; font-size:15px; 
+  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+  #       "Novos Casos/New Cases - ",title)
+  # })
+  # 
+  # ## add title bar with country name - Cumulated Cases
+  # output$plotTitle_cum <- renderUI({
+  #   title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+  #   div(style= 'text-align:center; font-size:15px;
+  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
+  #       "Casos Acumulados/Cumulated Cases - ",title)
+  # })
   
   #########################
   ## plot for ST prediction
   renderPlot_STpred = function(varPrefix, legendPrefix, yaxisTitle, pred_time) {
     ## plotly function for interactive plot
     renderPlotly({
+      ## load observed data based on input
       data = data_pred()
+      if(nrow(data) == 0) return(NULL) ## DOUGLAS
+      ## load prediction data
       pred_n = pred_n()
+      
       ## create last date and format dates for prediction
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
       
-      # varPrefix = "Cum"; legendPrefix = ""
       metric = input$metrics_ST
       metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases") 
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Mortes/Deaths",
                          Confirmed="Casos Confirmados/Confirmed Cases")
       
+      title = paste0(input$country_STpred,
+                     ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
+      metric_tit = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed cases",
+                      "Mortes/Deaths")
+      
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        plotly::config(displayModeBar=TRUE) %>%
+        plotly::config(displayModeBar=TRUE,  # include ModeBar
+                       displaylogo=FALSE,    # remove some buttons to simplify
+                       modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
+                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
         layout(
           ## title of ST pred graph
-          title = list(
-            text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y")),
-                        # "<br>Em desenvolvimento/Under development"),
-            font=f1,
-            xanchor="left", x=0), # font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+          title = list(text = paste0("<b>",title," - ",metric_tit,"<b>")),
           xaxis=list(
             title="",
             tickangle=-90, #type='category',
@@ -503,14 +531,21 @@ server = function(input, output, session) {
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_STpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"), 
           legend=list(x=0.03, y=0.97,bgcolor='rgba(240,240,240,0.5)',
-                      font=f1,
-                      title=list(text=paste0("<b>",metric_leg,"</b>"))),
+                      font=f1),
+                      # title=list(text=paste0("<b>",metric_leg,"</b>"))),
           font=f1,
           # add vertical line on last observed day
           shapes=list(type="line", opacity=0.7, line=list(color="black", width=1),
                       y0=0, y1=1, yref="paper",
-                      x0=last_date_n, x1=last_date_n)
-        )
+                      x0=last_date_n, x1=last_date_n),
+          dragmode = FALSE,
+          modebar = list(orientation = "v")
+        ) %>%
+        add_annotations(text=paste0("Atualizado em/Updated on ",printDate(last_date_n)),
+                        #format(last_date_n, format="%d/%b")), # format="%d/%m/%Y")),
+                        x = 0.99, y = 0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE)
       
       plt = plt %>%
         ## add lines for observed data
@@ -570,24 +605,24 @@ server = function(input, output, session) {
     })
   }
   
-  ## add title bar with country name - ST prediction
-  output$plotTitle <- renderUI({
-    title = paste0(input$country_STpred,
-                   ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
-    metric = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed Cases",
-                    "Mortes/Deaths")
-    div(style= 'text-align:center; font-size:15px;
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold',
-        metric, " - ",title
-    )
-  })
+  # ## add title bar with country name - ST prediction
+  # output$plotTitle <- renderUI({
+  #   title = paste0(input$country_STpred,
+  #                  ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
+  #   metric = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed Cases",
+  #                   "Mortes/Deaths")
+  #   div(style= 'text-align:center; font-size:15px;
+  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold',
+  #       metric, " - ",title
+  #   )
+  # })
   
   #########################
   ## plot for LT prediction
   renderPlot_LTpred = function(varPrefix, legendPrefix, yaxisTitle) {
     ## plotly function for interactive plot
     renderPlotly({
-      ## load observed data based on inpu
+      ## load observed data based on input
       data = data_predLT()
       if(nrow(data) == 0) return(NULL) ## DOUGLAS
       ## load prediction data
@@ -603,27 +638,37 @@ server = function(input, output, session) {
       
       # varPrefix = "New"; legendPrefix = ""
       metric = input$metrics_LT
-      metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases") 
+      # metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases")
+      metric_leg = switch(metric, Deaths="deaths", Confirmed="cases") 
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Deaths", #Deaths="Mortes/Deaths",
                          Confirmed="Confirmed Cases") # Confirmed="Casos Confirmados/Confirmed Cases")
       
+      title = paste0(input$country_LTpred,
+                     ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
+      metric_tit = ifelse(input$metrics_LT == "Confirmed", "Casos confirmados/Confirmed cases",
+                          "Mortes/Deaths")
+      
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
-        plotly::config(displayModeBar=TRUE ) %>% #, locale='pt-br') %>%
+        plotly::config(displayModeBar=TRUE,
+                       displaylogo=FALSE,
+                       modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
+                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
         layout(
-          title = list(
-          text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y") ),
-                      # "<br>Em desenvolvimento/Under development"),
-          font=f1,
-          xanchor="left", x=0 ), #font=list(family="Arial",size=12)), # y=1, yanchor="top"),
+          title = list(text = paste0("<b>",title," - ",metric_tit,"<b>")),
+          # title = list(
+          # text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y") ),
+          #             # "<br>Em desenvolvimento/Under development"),
+          # font=f1,
+          # xanchor="left", x=0 ), #font=list(family="Arial",size=12)), # y=1, yanchor="top"),
           annotations = list(text = paste0("<span style=\"line-height: 40px;\">",
                                             "<b>Peak 95% CI:</b> ",
                                            ifelse(is.null(pred_summary$high.dat.low)|is.null(pred_summary$high.dat.upper),
                                                   "NA",
                                                   paste0("(", printDate(pred_summary$high.dat.low),", ",
                                                          printDate(pred_summary$high.dat.upper), ")")),
-                                           "<br><b>Total Number of ",metric_leg,":</b> ",
+                                           "<br><b>Total number of ",metric_leg,":</b> ",
                                            round(pred_summary$NTC500,0), "<br>",
                                            "<b>95% CI:</b> ",
                                            ifelse(flag==1, "NA",
@@ -645,27 +690,30 @@ server = function(input, output, session) {
             title="",
             tickangle=-90, #type='category',
             ## add pred dates to the x axis
-            tick0=data$dateStr[1],dtick=7*86400000, # add ticks every week
+            tick0=data$dateStr[1],dtick=14*86400000, # add ticks every week
             tickformat="%d/%b"
           ),
           yaxis=list(title=yaxisTitle, type=if_else(input$scale_LTpred==1,"log","linear"),
                      hoverformat='.0f', hoverinfo="x+y"),
           legend=list(x=0.03, y=0.97,bgcolor='rgba(240,240,240,0.5)',
-                      font=list(family="Arial",size=10),
-                      title=list(text=paste0("<b>",metric_pt,"</b>"))),
+                      font=list(family="Arial",size=10) #,
+                      # title=list(text=paste0("<b>",metric_pt,"</b>"))
+                      ),
           font=f1,
           # add vertical line on last observed day
           shapes=list(type="line", opacity=0.7, line=list(color="black", width=1),
                       y0=0, y1=1, yref="paper",
                       x0=last_date_n, x1=last_date_n),
-          # margin
+          margin = list(t=20),
+          dragmode = FALSE,
           modebar = list(orientation = "v")
-        ) #%>%
-        # add_annotations(text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y")),
-        #                 x = 0.99, y = 0.1, xref="paper", yref="paper",
-        #                 font=list(family="Arial",size=12), align="right",
-        #                 showarrow=FALSE)
-      
+        ) %>%
+        add_annotations(text=paste0("Atualizado em/Updated on ",printDate(last_date_n)),
+                                    #format(last_date_n, format="%d/%b")), # format="%d/%m/%Y")),
+                        x = 0.99, y = 0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE)
+
 
       
       plt = plt %>%
