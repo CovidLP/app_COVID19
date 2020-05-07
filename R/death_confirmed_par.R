@@ -30,6 +30,8 @@ countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","C
 
 #countrylist <- c("Argentina","Bolivia","Canada","Chile","Colombia","Ecuador", "Greece", "India", "Japan", "Korea, South", "Mexico", "Peru", "Paraguay", "Poland", "Russia", "South Africa", "United Kingdom", "Uruguay", "Sweden", "US", "Venezuela")                    
 
+country_pop <- read.csv("pop/pop_WR.csv")
+
 #register cores
 registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 
@@ -37,6 +39,8 @@ registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
    country_name <- countrylist[s]
+
+   pop <- country_pop$pop[which(country_pop$country == country_name)]
 
    covid_states <- covid19 %>% filter(country==country_name) %>%
           mutate(confirmed_new = confirmed - lag(confirmed, default=0),
@@ -126,8 +130,8 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
 
       ##flag
-      cm <- 100000
-      ch <- 150000
+      cm <- pop * 0.01 * 0.09
+      ch <- pop * 0.015 * 0.1
       flag <- 0 #tudo bem
       {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana

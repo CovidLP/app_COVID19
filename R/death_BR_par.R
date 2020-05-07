@@ -42,6 +42,8 @@ covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE,
 covid19 <- bind_rows(covid19uf,covid19br)
 uf <- distinct(covid19,state)
 
+br_pop <- read.csv("pop/pop_BR.csv")
+
 ###########################################################################
 ###### JAGS 
 ###########################################################################
@@ -67,6 +69,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
         Y$d[j-1] = Y$d[j]
      }
    }
+
+  pop <- br_pop$pop[which(br_pop$uf == uf$state[s])]
 
   t = dim(Y)[1]
   
@@ -121,14 +125,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 
 
       ##flag
-      {if(s == 28){
-        cm <- 50000
-        ch <- 80000
-      }
-      else{
-        cm <- 8000
-        ch <- 10000
-      }}
+      cm <- pop * 0.01 * 0.09
+      ch <- pop * 0.015 * 0.1
       flag <- 0 #tudo bem
       {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
