@@ -125,8 +125,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 
 
       ##flag
-      cm <- pop * 0.01 * 0.09
-      ch <- pop * 0.015 * 0.1
+      cm <- pop * 0.025 * 0.12
+      ch <- pop * 0.03 * 0.15
       flag <- 0 #tudo bem
       {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
