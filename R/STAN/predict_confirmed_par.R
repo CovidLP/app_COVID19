@@ -104,16 +104,21 @@ model="stan_model_poisson_gen.stan"    #modelo STAN
 params = c("a","b","c","f","mu","yfut","mufut")
 
 burn_in= 2e3
-lag= 2
+lag= 3
 sample_size= 1e3
 number_iterations= burn_in + lag*sample_size
 number_chains= 1
 
 data_stan = list(y=Y[[i]], n=t, L=L)
 
+  init <- list(
+    list(a = 1, b = 1e-3, c = .15, f = 1)
+  )
+
   mod_sim<- try(sampling(object = mod, data = data_stan,
                          pars = params,
                          chains = number_chains,
+                         init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
                          control = list(max_treedepth = 15),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
