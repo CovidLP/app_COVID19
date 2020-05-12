@@ -1,6 +1,6 @@
 rm(list=ls())
 
-setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/R")
+setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/R/JAGS")
 
 ###################################################################
 ### Packages
@@ -25,7 +25,7 @@ covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE
          n_new = novos.casos,
          d_new = obitos.novos) %>%
   mutate(date = as.Date(date)) %>%
-  select(date, n, d, n_new, d_new, state) %>%
+  select(date, n, d, -n_new, -d_new, state) %>%
   arrange(state,date) %>% filter(date>='2020-02-01')
 
 covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
@@ -36,13 +36,13 @@ covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE,
          n_new = novos.casos,
          d_new = obitos.novos) %>%
   mutate(date = as.Date(date)) %>%
-  select(date, n, d, n_new, d_new, state) %>%
+  select(date, n, d, -n_new, -d_new, state) %>%
   arrange(date) %>% filter(date>='2020-02-01')
 
 covid19 <- bind_rows(covid19uf,covid19br)
 uf <- distinct(covid19,state)
 
-br_pop <- read.csv("pop/pop_BR.csv")
+br_pop <- read.csv("../pop/pop_BR.csv")
 
 ###########################################################################
 ###### JAGS 
@@ -58,8 +58,14 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   i = 4 # (2: confirmed, 3: deaths, 4: new confirmed, 5: new deaths)
   L = 300
   #t0 = Sys.time()
-  
-  Y = covid19 %>% filter(state==uf$state[s])
+  estado = uf$state[s]
+    
+  Y <- covid19 %>% filter(state==estado) %>%
+          mutate(n_new = n - lag(n, default=0),
+          d_new = d - lag(d, default=0)) %>%
+          select(date, n, d, n_new, d_new, state) %>%
+          arrange(date) %>% filter(date>='2020-02-01')
+  #Y = covid19 %>% filter(state==uf$state[s])
 
   while(any(Y$n_new <0)){
      pos <- which(Y$n_new <0)

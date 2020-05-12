@@ -1,6 +1,6 @@
 rm(list=ls())
 
-setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/R")
+setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/R/JAGS")
 
 ###################################################################
 ### Packages
@@ -30,7 +30,7 @@ countrylist <- c("Argentina","Australia","Belgium","Bolivia","Canada","Chile","C
 
 #countrylist <- c("Argentina","Bolivia","Canada","Chile","Colombia","Ecuador", "Greece", "India", "Japan", "Korea, South", "Mexico", "Peru", "Paraguay", "Poland", "Russia", "South Africa", "United Kingdom", "Uruguay", "Sweden", "US", "Venezuela")                    
 
-country_pop <- read.csv("pop/pop_WR.csv")
+country_pop <- read.csv("../pop/pop_WR.csv")
 
 #register cores
 registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -42,18 +42,26 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 
    pop <- country_pop$pop[which(country_pop$country == country_name)]
 
-   covid_states <- covid19 %>% filter(country==country_name) %>%
-          mutate(confirmed_new = confirmed - lag(confirmed, default=0),
-          # recovered_new = recovered - lag(recovered, default=0),
-          deaths_new = deaths - lag(deaths, default=0)) %>%
-          arrange(date,state)
+#   covid_states <- covid19 %>% filter(country==country_name) %>%
+#          mutate(confirmed_new = confirmed - lag(confirmed, default=0),
+#          # recovered_new = recovered - lag(recovered, default=0),
+#          deaths_new = deaths - lag(deaths, default=0)) %>%
+#          arrange(date,state)
 
-   covid_country <- covid_states %>% group_by(date) %>%
-          summarize(n = sum(confirmed, na.rm=T),
-              d = sum(deaths, na.rm=T),
-              n_new = sum(confirmed_new, na.rm=T),
-              d_new = sum(deaths_new, na.rm=T)) %>%
-              arrange(date) %>% filter(date>='2020-02-01')
+#   covid_country <- covid_states %>% group_by(date) %>%
+#          summarize(n = sum(confirmed, na.rm=T),
+#              d = sum(deaths, na.rm=T),
+#              n_new = sum(confirmed_new, na.rm=T),
+#              d_new = sum(deaths_new, na.rm=T)) %>%
+#              arrange(date) %>% filter(date>='2020-02-01')
+
+   covid_country <- covid19 %>% filter(country==country_name) %>%
+          mutate(n_new = confirmed - lag(confirmed, default=0),
+          d_new = deaths - lag(deaths, default=0)) %>%
+          rename(n = confirmed,
+                 d = deaths) %>%
+          arrange(date) %>% filter(date>='2020-02-01') %>% 
+          select(-c("state","country"))
    
 # covid_country %>% print(n=Inf)
 
@@ -79,13 +87,13 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   L = 300
   #t0 = Sys.time()
   
-  #use static to provide initial values
   params = c("a","b","c","f","yfut","mu")
   nc = 1 # 3
   nb = 90e3 # 5e4
   thin = 10
   ni = 10e3 # 5e4
   data_jags = list(y=Y[[i]], t=t, L=L)
+
   mod = try(jags.model(textConnection(mod_string_new), data=data_jags, n.chains=nc, n.adapt=nb, quiet=TRUE))
   try(update(mod, n.iter=ni, progress.bar="none"))
   mod_sim = try(coda.samples(model=mod, variable.names=params, n.iter=ni, thin=thin,progress.bar="none"))
