@@ -213,8 +213,8 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 			 end.dat.med = dat.med.end,
 			 end.dat.upper = dat.high.end)
          
-
-    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag) 
+    muplot <- data.frame(date = dat.full, mu = mu50[1:(t+L0)])
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = muplot, flag=flag)
     name.to.save <- gsub(" ", "-", country_name)
 
          ### saveRDS

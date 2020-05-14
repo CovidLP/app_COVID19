@@ -208,7 +208,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
 			 end.dat.upper = dat.high.end)
          
 
-    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = mu50[1:(t+L0)], flag=flag)
+    muplot <- data.frame(date = dat.full, mu = mu50[1:(t+L0)])
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = muplot, flag=flag)
         
     ### saveRDS
     results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STpredictions/"
