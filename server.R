@@ -8,6 +8,7 @@ library(dplyr)
 library(tidyr)
 library(httr)
 library(lubridate)
+library(knitr)
 
 # Sys.setlocale("LC_TIME", "pt-br")
 
@@ -98,7 +99,7 @@ loadData.BR = function(fileName) {
              `CumDeaths` = obitos.acumulados
              ) %>%
       select(-2)
-    
+    # browser()
     save(data, file=fileName)  
   } else {
     load(file=fileName)
@@ -416,13 +417,20 @@ server = function(input, output, session) {
       ## create title with country/state name
       title = paste0(input$country,
                      ifelse(input$state == "<all>","",paste0(" / ",input$state)))
+      
+      png_title = paste0("Data_",input$country,
+                         ifelse(input$state == "<all>","",paste0("_",input$state,"_")),
+                         format(last_date_n, format="%d%m%Y")
+                         )
 
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         plotly::config(displayModeBar=TRUE,  # include ModeBar
                        displaylogo=FALSE,    # remove some buttons to simplify
                        modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
-                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
+                                                  "hoverClosestCartesian", "autoScale2d"),
+                       toImageButtonOptions = list(format = "png",
+                                                   filename = png_title )) %>% #, locale='pt-br') %>%
         layout(
           ## add country and state to title
           title = list(text = paste0("<b>",title,"<b>")),
@@ -512,12 +520,20 @@ server = function(input, output, session) {
       metric_tit = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed cases",
                       "Mortes/Deaths")
       
+      png_title = paste0("STpred_",input$country_STpred,
+                         ifelse(input$state_STpred == "<all>","",paste0("_",input$state_STpred)),
+                         switch(metric, Deaths="_d_", Confirmed="_n_"),
+                         format(last_date_n, format="%d%m%Y")
+                         )
+      
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         plotly::config(displayModeBar=TRUE,  # include ModeBar
                        displaylogo=FALSE,    # remove some buttons to simplify
                        modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
-                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
+                                                  "hoverClosestCartesian", "autoScale2d"),
+                       toImageButtonOptions = list(format = "png",
+                                                   filename = png_title )) %>% #, locale='pt-br') %>%
         layout(
           ## title of ST pred graph
           title = list(text = paste0("<b>",title," - ",metric_tit,"<b>")),
@@ -648,20 +664,22 @@ server = function(input, output, session) {
                      ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
       metric_tit = ifelse(input$metrics_LT == "Confirmed", "Casos confirmados/Confirmed cases",
                           "Mortes/Deaths")
+      png_title = paste0("LTpred_",input$country_LTpred,
+                         ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
+                         switch(metric, Deaths="_d_", Confirmed="_n_"),
+                         format(last_date_n, format="%d%m%Y")
+                         )
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         plotly::config(displayModeBar=TRUE,
                        displaylogo=FALSE,
                        modeBarButtonsToRemove = c("lasso2d","select2d","toggleSpikelines","hoverCompareCartesian",
-                                                  "hoverClosestCartesian", "autoScale2d")) %>% #, locale='pt-br') %>%
+                                                  "hoverClosestCartesian", "autoScale2d"),
+                       toImageButtonOptions = list(format = "png",
+                                                   filename = png_title )) %>% #, locale='pt-br') %>%
         layout(
           title = list(text = paste0("<b>",title," - ",metric_tit,"<b>")),
-          # title = list(
-          # text=paste0("Atualizado em/Updated on ",format(last_date_n, format="%d/%m/%Y") ),
-          #             # "<br>Em desenvolvimento/Under development"),
-          # font=f1,
-          # xanchor="left", x=0 ), #font=list(family="Arial",size=12)), # y=1, yanchor="top"),
           annotations = list(text = paste0("<span style=\"line-height: 40px;\">",
                                             "<b>Peak 95% CI:</b> ",
                                            ifelse(is.null(pred_summary$high.dat.low)|is.null(pred_summary$high.dat.upper),
@@ -715,13 +733,14 @@ server = function(input, output, session) {
                         showarrow=FALSE)
 
 
-      
+      # browser()
       plt = plt %>%
         ## add mu line
         add_trace(
-          x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))],
-              pred_n$date),
-          y=c(mu_plot),
+          # x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))],
+          #     pred_n$date),
+          x = mu_plot$date, y = mu_plot$mu,
+          # y=c(mu_plot),
           type='scatter', mode='lines', hoverinfo="none", # "x+y",
           # name=paste(metric_pt, "Estimated Mean"),
           name=("Estimated Mean"),
@@ -840,5 +859,5 @@ server = function(input, output, session) {
     yaxisTitle = "Novos Casos por Dia/New Cases per Day"
   )
   
-  
+
 }

@@ -7,6 +7,7 @@ library(shinyjs)
 library(plotly)
 library(shinythemes)
 library(shinycssloaders)
+library(markdown)
 
 ## Código da Interface
 
@@ -18,21 +19,26 @@ shinyUI(
     tags$head(includeHTML(("google-analytics.html"))),
     
     useShinyjs(), ## DOUGLAS
+    
     ## título
     titlePanel(
-      div(column(width = 9, h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
-                 h4("Short and long term prediction for COVID-19")),
-          column(width = 3, tags$a(href="https://est.ufmg.br",
-                                   tags$img(src="logoestatistica.png",
-                                            title="DEST/UFMG", height="45")),
+      div(column(width = 9,
+                 h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
+                 h4("Short and long term prediction for COVID-19")
+                 ),
+          column(width = 3, 
+                 tags$a(href="https://est.ufmg.br",
+                        tags$img(src="logoestatistica.png", title="DEST/UFMG", height="45")),
+          #        tags$a(href="https://github.com/thaispaiva/app_COVID19",
+          #               tags$i(class = "fab fa-github", style = 'font-size:30px; color: black; display: list-item; padding-left: 10px; position: fixed; bottom: 70px;'))
+          # )
                  tags$a(href="https://github.com/thaispaiva/app_COVID19",
                         div(h5("Código Fonte/Source Code"))),
                             # tags$img(src="www/GitHub-Mark-32px.png",
-                            #          title="GitHub", height="5"))), 
+                            #          title="GitHub", height="5"))),
                  style = "transform: translate(0%, 22%);"
-                 )
-                                   
-          ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
+          )
+      ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
     ),
     
     fluidRow( ),
@@ -169,8 +175,10 @@ shinyUI(
         
           ## painel principal - output (pdf)
           mainPanel(
-            tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
-                        src="Covid19UFMG.pdf"))
+            withMathJax(includeMarkdown("www/CoronaUFMG_MD.Rmd")) #,
+            # tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
+                        # src="Covid19UFMG.pdf"))
+          )
       ),
       
       
@@ -203,7 +211,9 @@ shinyUI(
               "Thais Pacheco Menezes",br(),
               "Vitor Faria de Carvalho Oliveira"),
             div(tags$b("Doutora:"),br(),
-              "Juliana Freitas De Mello E Silva")
+              "Juliana Freitas De Mello E Silva"),
+            div(tags$b("Doutor:"),br(),
+                "Douglas R. Mesquita Azevedo")
           ),
           
           ## painel principal 
@@ -219,6 +229,7 @@ shinyUI(
             p(tags$b("Our forecasts are updated daily,"),"and may change based on new data that arrives every day. The predictions are accompanied by the respective probability intervals (or credibility, in statistical jargon) so that the user is always aware of the true uncertainty associated with each forecast provided. Another important point is that the predictions are always based on the maintenance of conditions on the day the forecast was made, including isolation conditions. Changes on these conditions can cause substantial alterations on the predictions."),
             p("For more information, check the Theoretical Foundation tab and access ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
             h3("Na mídia/In the news:"),
+            p("08/05/2020 - ",a(href="https://www.jetro.go.jp/biznews/2020/05/c9c4655a1215521d.html", "Notícia no site Jetro Japão")),
             p("05/05/2020 - ",a(href="https://ufmg.br/comunicacao/noticias/aplicativos-projetam-infeccoes-e-mortes-pelo-coronavirus-em-longo-prazo", "Notícia no site da UFMG")),
             p("04/05/2020 - ",a(href="https://www.hojeemdia.com.br/primeiro-plano/estudo-da-ufmg-projeta-pico-de-casos-da-covid-19-no-brasil-para-o-dia-18-deste-m%C3%AAs-1.785365", "Matéria no Jornal Hoje em Dia")),
             p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia"))
