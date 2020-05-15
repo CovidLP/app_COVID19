@@ -1,75 +1,73 @@
 ## Aplicativo Shiny - Modelo de Predição de Casos de Coronavírus
 ## DEST/UFMG - mar/2020
 
-## load packages
-library(shiny)
-library(shinyjs)
-library(plotly)
-library(shinythemes)
-library(shinycssloaders)
-library(markdown)
-
 ## Código da Interface
 
 shinyUI(
   
   fluidPage(
     
-    ## add css style file
+    ## Add css style file
     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")), ## ATUALIZAR
     
     ## Include Google Analytics
     tags$head(includeHTML(("google-analytics.html"))),
+    useShinyjs(),
     
-    useShinyjs(), ## DOUGLAS
-    
-    ## título
+    ## Título
     titlePanel(
-      div(column(width = 9,
-                 h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
-                 h4("Short and long term prediction for COVID-19")
-                 ),
-          column(width = 3, 
-                 tags$a(href="https://est.ufmg.br",
-                        tags$img(src="logoestatistica.png", title="DEST/UFMG", height="45")),
-                 # tags$a(                                                     
-                 #   href = "https://github.com/thaispaiva/app_COVID19",       
-                 #   icon("github")                                            ## ATUALIZAR
-                 # ),                                                          
-                 # tags$a(href="https://github.com/thaispaiva/app_COVID19",
-                 #        div(h5("Código Fonte/Source Code"))),
-                            # tags$img(src="www/GitHub-Mark-32px.png",
-                            #          title="GitHub", height="5"))),
-                 style = "transform: translate(0%, 22%);"
-          )
+      div(
+        column(
+          width = 9,
+          h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
+          h4("Short and long term prediction for COVID-19")
+        ),
+        column(
+          width = 3, 
+          tags$a(href="https://est.ufmg.br",
+                 tags$img(src="logoestatistica.png", title="DEST/UFMG", height="45")),
+          # tags$a(                                                     
+          #   href = "https://github.com/thaispaiva/app_COVID19",       
+          #   icon("github")                                            ## ATUALIZAR
+          # ),                                                          
+          # tags$a(href="https://github.com/thaispaiva/app_COVID19",
+          #        div(h5("Código Fonte/Source Code"))),
+          # tags$img(src="www/GitHub-Mark-32px.png",
+          #          title="GitHub", height="5"))),
+          style = "transform: translate(0%, 22%);"
+        )
       ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
     ),
     
-    fluidRow( ),
+    fluidRow(),
     
     tagList(
-    
+      
       ## js file to add github logo to navbar
       tags$head(tags$script(type="text/javascript", src = "code.js", ".tab-content")),
-#       tags$script(HTML("var header = $('.navbar > .container-fluid');
-# header.append('<div style=\"float:right\"><a href=\"https://github.com/thaispaiva/app_COVID19\"><img src=\"www/GitHub-Mark-Light-32px.png\" alt=\"alt\" style=\"float:right;width:33px;height:41px;padding-top:10px;\"> </a>`</div>');
-#                        console.log(header)")
-#       ),
+      #       tags$script(HTML("var header = $('.navbar > .container-fluid');
+      # header.append('<div style=\"float:right\"><a href=\"https://github.com/thaispaiva/app_COVID19\"><img src=\"www/GitHub-Mark-Light-32px.png\" alt=\"alt\" style=\"float:right;width:33px;height:41px;padding-top:10px;\"> </a>`</div>');
+      #                        console.log(header)")
+      #       ),
       
       navbarPage(
         
-        # ## tema do layout
+        ## Tema do layout
         theme = shinytheme("flatly"),
+        
+        ## ID 
+        id = "covid_navbar",
+        selected = "dados",
         
         ## Nome do app
         # "Previsão de curto e longo prazo para COVID-19", # sigla?
         "CovidLP",
         
         ########################################
-        
         ## 1a aba
         tabPanel(
           title = HTML("<b>Dados</b>/<br>Data"),
+          value = "dados",
           
           sidebarLayout(
             ## painel lateral - input
@@ -89,7 +87,7 @@ shinyUI(
               width=3
             ),
             
-            ## painel principal - output (gráficos)
+            ## Painel principal - output (gráficos)
             mainPanel(
               # uiOutput("plotTitle_daily"),
               p("Novos casos/New cases:", style="text-align:left"),
@@ -107,6 +105,7 @@ shinyUI(
         ## 2a aba
         tabPanel(
           title = HTML("<b>Previsão Curto Prazo</b>/<br>Short term Prediction"),
+          value = "curt_prazo",
           
           sidebarLayout(
             ## painel lateral - input
@@ -142,6 +141,7 @@ shinyUI(
         ## 3a aba
         tabPanel(
           title = HTML("<b>Previsão Longo Prazo</b>/<br>Long Term Prediction"),
+          value = "longo_prazo",
           
           sidebarLayout(
             ## painel lateral - input
@@ -181,23 +181,32 @@ shinyUI(
           )
         ),
         
-        
         ## 4a aba
         tabPanel(
           title = HTML("<b>Fundamentação Teórica</b>/<br>Theoretical Foundation"),
+          value = "teoria",
           
-          ## painel principal - output (pdf)
+          ## Painel principal - output (pdf)
           mainPanel(
-            withMathJax(includeMarkdown("www/CoronaUFMG_MD.Rmd")) #,
+            #withMathJax(includeMarkdown("www/CoronaUFMG_MD.Rmd"))
+            column(
+              width = 12,
+              wellPanel(
+                fluidRow(
+                  downloadButton("material_covid", label = "Download", style = 'float: right; margin-right: 5%;')
+                ),
+                uiOutput("markdown")    
+              )
+            ),
             # tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
             # src="Covid19UFMG.pdf"))
           )
         ),
         
-        
         ## 5a aba
         tabPanel(
           title = HTML("<b>Sobre</b>/<br>About"),
+          value = "sobre",
           
           sidebarLayout(
             ## painel lateral 
@@ -275,7 +284,3 @@ shinyUI(
     )
   )
 )
-
-                              
-                            
-
