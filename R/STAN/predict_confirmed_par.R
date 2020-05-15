@@ -98,21 +98,19 @@ L = 300
 #t0 = Sys.time()
 
 
-model="stan_model_poisson_gen.stan"    #modelo STAN
-
 #use static to provide initial values
-params = c("a","b","c","f","mu","yfut","mufut")
-
-burn_in= 2e3
-lag= 3
-sample_size= 1e3
-number_iterations= burn_in + lag*sample_size
-number_chains= 1
-
-data_stan = list(y=Y[[i]], n=t, L=L)
-
+  params = c("a","b","c","f","mu")
+  
+  burn_in= 2e3
+  lag= 3
+  sample_size= 1e3
+  number_iterations= burn_in + lag*sample_size
+  number_chains= 1
+  
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=1.1*pop)
+  
   init <- list(
-    list(a = 1, b = 1e-3, c = .15, f = 1)
+    list(a = 1, b1 = log(1e-3), c = .15, f = 1)
   )
 
   mod_sim<- try(sampling(object = mod, data = data_stan,
@@ -120,7 +118,7 @@ data_stan = list(y=Y[[i]], n=t, L=L)
                          chains = number_chains,
                          init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
-                         control = list(max_treedepth = 15),
+                         control = list(max_treedepth = 15, adapt_delta=0.9),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
 
 if(class(mod_sim) != "try-error"){
@@ -131,13 +129,19 @@ if(class(mod_sim) != "try-error"){
   b_pos = "b"
   c_pos = "c"
   f_pos = "f"
-  mu_pos = c(paste0("mu[",1:t,"]"),paste0("mufut[",1:L,"]"))
+  #mu_pos = c(paste0("mu[",1:t,"]"),paste0("mufut[",1:L,"]"))
+  mu_pos = paste0("mu[",1:t,"]")
   yfut_pos = paste0("yfut[",1:L,"]")
-  L0 = 14
-  
-  mod_chain_y = as.matrix(mod_chain[yfut_pos])
+
+  source("posterior_sample.R")
+  fut <- predL(L=L,t,pop,Y[[2]][t],c(mod_chain[[a_pos]]),c(mod_chain[[b_pos]]),c(mod_chain[[c_pos]]),c(mod_chain[[f_pos]]))
+
+    
+  mod_chain_y = fut$y.fut
+  #mod_chain_y = as.matrix(mod_chain[yfut_pos])
   mod_chain_cumy = rowCumsums(mod_chain_y) + Y[[2]][t]
-  
+
+  L0 = 14  
   
   ### list output
   df_predict <- data.frame( date = as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01"),
@@ -177,7 +181,10 @@ if(class(mod_sim) != "try-error"){
   Dat25 <- Dat500 <- Dat975 <- NULL
   dat.low.end <- dat.med.end <- dat.high.end <- NULL
   
-  mod_chain_mu = as.matrix(mod_chain[mu_pos])
+ #mod_chain_mu = as.matrix(mod_chain[mu_pos])
+ifelse(length(fut$pos) > 0,
+       mod_chain_mu <- cbind(as.matrix(mod_chain[mu_pos])[-fut$pos,],fut$mu.fut),
+       mod_chain_mu <- cbind(as.matrix(mod_chain[mu_pos]),fut$mu.fut))
   mu50 <- apply(mod_chain_mu,2,quantile, probs=0.5)
   Dat500 <- dat.full[which.max(mu50[1:(t+L0)])]
   

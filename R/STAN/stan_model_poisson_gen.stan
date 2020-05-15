@@ -10,19 +10,21 @@ data {
   //-----------------------------
   // observed data
   int<lower=1> n; // number of observations
-  int y[n]; // counts of new cases
+  int<lower=0> y[n]; // counts of new cases
   int<lower=1> L;     // number of predictions
-  
+  real pop;
   //-----------------------------
- 
 }
 
 
-parameters {
-  
+parameters { 
   real<lower=0> a;  
-  real<lower=0> b; 
-  real<lower=0> c;
+
+  //real<lower=0> b; 
+  real<lower=-30> b1;
+
+  real<lower=0, upper=1> c;
+
   real<lower=0> f;
   //real f1;
   
@@ -31,12 +33,15 @@ parameters {
 transformed parameters{
   
   //real f;
-  real mu[n];
+  real<lower=0> b;
+  real<lower=0, upper=pop> mu[n];
   
   //f=exp(f1);
+  b = exp(b1);
   
   for(t in 1:n){
-    mu[t] = f*a*c*exp(-c*t)/ (b+exp(-c*t))^(f+1);
+    mu[t] = exp(log(f)+log(a)+log(c)-(c*t)-(f+1)*log( b+exp(-c*t) ) );
+    //mu[t] = f*a*c*exp(-c*t)/ (b+exp(-c*t))^(f+1);
   }
   
 }
@@ -45,26 +50,13 @@ transformed parameters{
 model {
   //----------------------------
   // likelihood function
-  for(t in 1:n){
-    y[t] ~ poisson(mu[t]); // observed model
-  }
-   //----------------------
+    y ~ poisson(mu); // observed model
+  //----------------------
    // prior distributions
    a ~ gamma(0.1, 0.1);
-   b ~ gamma(0.1, 0.1);
+   //b ~ gamma(0.1, 0.1);
    c ~ beta(2,6);
    f ~ gamma(0.01,0.01);   // shape, scale 
   //f1 ~ normal(0, sqrt(10));  // sqrt(1/0.1)
-
-}
-
-generated quantities{
-  real mufut[L]; // media of predictions
-  int yfut[L]; // predictions of new cases
-  
-  for(j in 1:L){
-    mufut[j]=f*a*c*exp(-c*(n+j))/ (b+exp(-c*(n+j)))^(f+1);
-    yfut[j] = poisson_rng(mufut[j]);
-  }
-  
+  b1 ~ normal(0, sqrt(20));  // sqrt(1/0.1)
 }
