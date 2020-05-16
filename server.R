@@ -14,9 +14,9 @@ server = function(input, output, session) {
   showModal(modalDialog(
     div(p("Caso esteja acessando pelo celular, o aplicativo é melhor visualizado com o aparelho na horizontal"),#tags$br,
         p("If you are on mobile, the application is best viewed with the device on horizontal.")),
-    easyClose = T,
+    easyClose = FALSE,
     footer = tagList(
-      modalButton("Ok")
+      actionButton(inputId = "ok_popup", label = "Ok")
     )
   ))
   
@@ -553,7 +553,8 @@ server = function(input, output, session) {
         layout(
           title = list(text = paste0("<b>",title," - ",metric_tit,"<b>")),
           annotations = list(text = paste0("<span style=\"line-height: 40px;\">",
-                                           "<b>Peak 95% CI:</b> ",
+                                           "<b>Peak:</b> ", printDate(pred_summary$high.dat.med),
+                                           "<br><b>Peak 95% CI:</b> ",
                                            ifelse(is.null(pred_summary$high.dat.low)|is.null(pred_summary$high.dat.upper),
                                                   "NA",
                                                   paste0("(", printDate(pred_summary$high.dat.low),", ",
@@ -709,12 +710,19 @@ server = function(input, output, session) {
   ###################################################################
   
   ## OBSERVED DATA GRAPHS
-  output$dailyMetrics = renderPlot_obs(
-    varPrefix = "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
-    legendPrefix="", yaxisTitle="Novos Casos por Dia/New Cases per Day")
-  output$cumulatedMetrics = renderPlot_obs(
-    varPrefix = "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
-    legendPrefix="", yaxisTitle="Casos Acumulados/Cumulated Cases")
+  observe({
+    
+    if(!is.null(input$ok_popup) && input$ok_popup > 0) {
+      removeModal()
+      
+      output$dailyMetrics = renderPlot_obs(
+        varPrefix = "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
+        legendPrefix="", yaxisTitle="Novos Casos por Dia/New Cases per Day")
+      output$cumulatedMetrics = renderPlot_obs(
+        varPrefix = "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
+        legendPrefix="", yaxisTitle="Casos Acumulados/Cumulated Cases") 
+    }
+  })
   
   ## SHORT TERM PREDICTION GRAPH
   output$STpred = renderPlot_STpred(
