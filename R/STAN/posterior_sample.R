@@ -8,13 +8,15 @@
 predL <- function(L=100,B,pop,casos,a,b,c,f){
   #save sample size
   M <- length(a)
-
+  Max <- 2*pop
   y.fut <- mu <- matrix(-Inf, ncol=L,nrow=M)
 
   #gernate sample from the mu's
   for(i in 1:L){
     mu[,i] <-  exp(log(f)+log(a)+log(c)-(c*(B+i))-(f+1)*log(b+exp(-c*(B+i)) ) )
     y.fut[,i] <- rpois(M,mu[,i])
+    pos <- which(is.na(y.fut[,i]))
+    if(length(pos) > 0) y.fut[pos,i] <- Max
   }
   pos <- which(rowSums(mu)+casos > pop)
   #pos <- unique(which(mu > pop, arr.ind=TRUE)[,1])
