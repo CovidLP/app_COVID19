@@ -30,7 +30,7 @@ onde $Y(t)$ é o **número de casos acumulados** até o dia $t$ em uma dada regi
 
 **Caso especial:** 
 
-- $b = 0$ (crescimento exponencial) $ \rightarrow \mu(t) = a .\,\exp \{ ct \} $;
+- $b = 0$ (crescimento exponencial) $\rightarrow \mu(t) = a .\,\exp \{ ct \}$;
 
 - adequado para os estágios iniciais da pandemia.
 
@@ -179,11 +179,11 @@ Modelos anteriores assumem comportamento estático:
 $\mu ( t ) =  \frac{ a( {\color{red} t )} \ \exp{ \{ c( {\color{red}t) } \  t \} } } {1 + b( {\color{red}t) } \ \exp { \{ c({\color{red}t) } \ t \} }}$
 
 com:
-$a ( t ) = a ( t-1) + w_a ( t )$, onde $w_a ( t ) \sim N ( 0 , W_a ), \forall t $.
+$a ( t ) = a ( t-1) + w_a ( t )$, onde $w_a ( t ) \sim N ( 0 , W_a ), \forall t$.
 
-$b ( t ) = b ( t-1) + w_b ( t )$, onde $w_b ( t ) \sim N ( 0 , W_b ), \forall t $.
+$b ( t ) = b ( t-1) + w_b ( t )$, onde $w_b ( t ) \sim N ( 0 , W_b ), \forall t$.
 
-$c ( t ) = c ( t-1) + w_c ( t )$, onde $w_c ( t ) \sim N ( 0 , W_c ), \forall t $.
+$c ( t ) = c ( t-1) + w_c ( t )$, onde $w_c ( t ) \sim N ( 0 , W_c ), \forall t$.
 
 
 **Vantagens:**
@@ -205,11 +205,11 @@ c) não dá para simplificar $W_a = W_b = W_c = W$ (magnitudes diferentes de $(a
 
 Outra forma de introduzir dinamismo, agora **multiplicativo**:
 
-$a ( t ) = a ( t-1) \times w_a ( t )$, onde $w_a ( t ) \sim Gamma ( d_a ,d_a ), \forall t $.
+$a ( t ) = a ( t-1) \times w_a ( t )$, onde $w_a ( t ) \sim Gamma ( d_a ,d_a ), \forall t$.
 
-$b ( t ) = b ( t-1) \times w_b ( t )$, onde $w_b ( t ) \sim Gamma ( d_b ,d_b ), \forall t $.
+$b ( t ) = b ( t-1) \times w_b ( t )$, onde $w_b ( t ) \sim Gamma ( d_b ,d_b ), \forall t$.
 
-$c ( t ) = c ( t-1) \times w_c ( t )$, onde $w_c ( t ) \sim Gamma ( d_c ,d_c ), \forall t $.
+$c ( t ) = c ( t-1) \times w_c ( t )$, onde $w_c ( t ) \sim Gamma ( d_c ,d_c ), \forall t$.
 
 
 **Vantagens:**
