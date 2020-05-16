@@ -79,21 +79,21 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
 
 - What can be said about $Y (t+k ), \forall k$, for $t$ fixed (today)? 
 
-  Depends on the distribution of $Y( t)$ but will always be given by the predictive distribution of $Y(t+k)$ given $Y(1:t) = \{ Y( 1) , ... , Y( t ) \}$ - what was observed.
+  It depends on the distribution of $Y(t)$ but will always be given by the predictive distribution of $Y(t+k)$ given $Y(1:t) = \{ Y(1) , ... , Y(t) \}$ - what was observed.
   
-  Works as the posterior distribution of $Y(t + k )$.
+  It works as the posterior distribution of $Y(t + k )$.
 
 <br>
 
 **Useful result:** If $Z$ and $W$ are any 2 r. v.'s then:
 
-* $E[Z] = E[ E(Z \mid W ) ]$
+- $E[Z] = E[ E(Z \mid W ) ]$
 
-* $Var[Z] = Var[ E(Z \mid W ) ] +  E[ Var( Z \mid W ) ]$
+- $Var[Z] = Var[ E(Z \mid W ) ] +  E[ Var( Z \mid W ) ]$
 
-  In particular, $E[Y ( t + k ) \mid Y( 1:t)] = E\{ E[ Y ( t + k ) \mid \mu( 1:t)] \mid Y( 1:t) \} = E[ \mu( t+k )] \mid Y( 1:t) ]$, the posterior mean of $\mu ( t + k )$.
+In particular, $E[Y ( t + k ) \mid Y( 1:t)] = E\{ E[ Y ( t + k ) \mid \mu( 1:t)] \mid Y( 1:t) \} = E[ \mu( t+k )] \mid Y( 1:t) ]$, the posterior mean of $\mu ( t + k )$.
 
-  Inference about all that was described above should be reported through point estimators (eg: posterior means), along with respective credibility intervals.
+Inference about all that was described above should be reported through point estimators (eg: posterior means), along with respective credibility intervals.
 
 <br>
 
