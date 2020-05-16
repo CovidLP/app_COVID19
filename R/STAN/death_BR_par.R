@@ -95,11 +95,11 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   
   burn_in= 2e3
   lag= 3
-  sample_size= 3e3
+  sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop))  
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop)  
   
   init <- list(
     list(a = 1, b = log(1e-3), c = .15, f = 1)
