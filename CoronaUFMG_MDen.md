@@ -4,7 +4,7 @@ author: "Dani Gamerman"
 # output: slidy_presentation
 output: 
  html_document:
-   toc: false
+   toc: true
    # toc_depth: 5
    # toc_float: true
 ---
