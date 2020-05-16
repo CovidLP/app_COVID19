@@ -260,4 +260,5 @@ Essa expressão é a forma mais simples da logística.
 
 Ela pode ser generalizada de várias formas. Uma possível forma da **logística generalizada** é
 $$\mu ( t ) = d + \frac{ a - d} {(  b + \exp { \{ - ct \} } )^f}$$
+
 A logística é obtida fazendo $d=0$ e $f=1$.
