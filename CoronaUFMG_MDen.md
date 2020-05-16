@@ -113,10 +113,6 @@ Thus, MNNC is also a function of parameters $(a,b,c)$ and can be easily calculat
 
 For any fixed $t$ and $k$, one can obtain its posterior distribution (via MCMC sample) and calculate mean, quantiles and credibility intervals.
 
-<!-- ![](FigApp.png){width=60%} -->
-
-<img src = "FigApp.png" width="600" />
-
 ![Long Term Graph](FigApp.png Estimates and credibility intervals for the pandemic peak and for the total number of cases")
 
 <br>
@@ -264,7 +260,7 @@ a) Allows exact calculation, thus avoiding (MCMC) approximations.
 
 a) Does not allow dynamic $b$ and $c$.
 
-<br>
+
 #### Generalizations of the logistic curve
 
 So far, logistic curve was used to specify the mean $\mu ( t )$ as $\mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ ct \} }} = \frac{ a} { b + \exp { \{ - ct \} }}$.
