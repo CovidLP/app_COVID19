@@ -26,12 +26,12 @@ $$
 Y(t) \sim N ( \mu (t) , \sigma^2 ), \qquad t = 1, 2, ...
 $$
 
-where $Y(t)$ is the **cumulated number of confirmed cases** by day $t$ in a given region, with $\mu ( t ) = \frac{ a .\, \exp{ \{ c t \} } } {1 + b .\, \exp { \{ c t \} }}.$
+where $Y(t)$ is the **cumulated number of confirmed cases** by day $t$ in a given region, with $\mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ c t \} }}.$
 
 
 **Special case:** 
 
-- $b = 0$ (exponential growth) $ \rightarrow \mu(t) = a .\,\exp \{ ct \} $;
+- $b = 0$ (exponential growth) $ \rightarrow \mu(t) = a \exp \{ ct \} $;
 
 - adequate for early stages of the pandemic.
 
@@ -59,7 +59,7 @@ The most important characteristics are:
 
 **2) Assintote**
 
-$\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \} } } {1 + b .\, \exp { \{ ct \} }} = \frac ab$
+$\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ ct \} }} = \frac ab$
 
 - Reflects the total number of cases accumulated throughout the whole trajectory of the pandemic.
 
