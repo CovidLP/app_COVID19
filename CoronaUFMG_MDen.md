@@ -70,7 +70,7 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
 - Exponential growth  ($b=0$): number of new cases never stops growing!
 
 
-**4) Prediction:** 
+**4) Prediction** 
 
 - What can be said about $Y (t+k ), \forall k$, for $t$ fixed (today)? 
 
@@ -78,7 +78,6 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
   
   Works as the posterior distribution of $Y(t + k )$.
 
-<br>
 **Useful result:** If $Z$ and $W$ are any 2 r. v.'s then:
 
 * $E[Z] = E[ E(Z \mid W ) ]$
@@ -89,7 +88,6 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
 
   Inference about all that was described above should be reported through point estimators (eg: posterior means), along with respective credibility intervals.
 
-<br>
 **5) Reproducibility rate $R_0$**
 
 $R_0$ is the expected number of secondary cases of a disease caused by an infected individual.
