@@ -29,9 +29,9 @@ $$
 onde $Y(t)$ é o número de casos acumulados até o dia $t$ em uma dada região, com
 
 $$
-\mu ( t ) = \frac{ a .\, \exp{ \{ c t \} } } {1 + b .\, \exp { \{ c t \} }}.
+\mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ c t \} }}.
 $$
-**Caso especial:** $b = 0$ (crescimento exponencial) $ \rightarrow \mu(t) = a .\,\exp \{ ct \} $.
+**Caso especial:** $b = 0$ (crescimento exponencial) $ \rightarrow \mu(t) = a \exp \{ ct \} $.
 
 - Adequado para os estágios iniciais da pandemia
 
