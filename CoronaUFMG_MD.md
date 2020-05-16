@@ -174,17 +174,17 @@ $c ( t ) = c ( t-1) + w_c ( t )$, onde $w_c ( t ) \sim N ( 0 , W_c ), \forall t 
 
 **Vantagens:**
 
-1) $E[ a(t) \mid a(t-1 )]= a (t-1)$, e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ constância local.
+a) $E[ a(t) \mid a(t-1 )]= a (t-1)$, e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ constância local.
 
-2) $Var[ a(t) \mid a(t-1 )]= W_a$, e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ aumento da incerteza.
+b) $Var[ a(t) \mid a(t-1 )]= W_a$, e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ aumento da incerteza.
 
 **Problemas:**
 
-1) variâncias $W_a, W_b, W_c$ conhecidas $\Rightarrow$ difíceis de especificar.
+a) variâncias $W_a, W_b, W_c$ conhecidas $\Rightarrow$ difíceis de especificar.
 
-2) variâncias $W_a, W_b, W_c$ deconhecidas $\Rightarrow$ difíceis de estimar.
+b) variâncias $W_a, W_b, W_c$ deconhecidas $\Rightarrow$ difíceis de estimar.
 
-3) não dá para simplificar $W_a = W_b = W_c = W$ (magnitudes diferentes de $(a,b,c)$).
+c) não dá para simplificar $W_a = W_b = W_c = W$ (magnitudes diferentes de $(a,b,c)$).
 
 - Outra forma de introduzir dinamismo, agora multiplicativo:
 
@@ -197,21 +197,22 @@ $c ( t ) = c ( t-1) \times w_c ( t )$, onde $w_c ( t ) \sim Gamma ( d_c ,d_c ), 
 
 **Vantagens:**
 
-1) $E[ a(t) \mid a(t-1 )]= a (t-1)$ e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ constância local.
+a) $E[ a(t) \mid a(t-1 )]= a (t-1)$ e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ constância local.
 
-2) $Var[ a(t) \mid a(t-1 )]= d_c^{-1}$ e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ aumento da incerteza.
+b) $Var[ a(t) \mid a(t-1 )]= d_c^{-1}$ e o mesmo vale para $b(t)$ e $c(t) \Rightarrow$ aumento da incerteza.
 
-3) Hiperparâmetros $d_a, d_b, d_c$ fáceis de especificar.
+c) Hiperparâmetros $d_a, d_b, d_c$ fáceis de especificar.
 
 Exemplos:
 $$d=1000 \ \to \ 0,90= P ( 0,95 < w(t) < 1,05 ) = P \left( 0,95 < \frac {a(t)}{a(t-1) } < 1,05 \right)$$
 $$d=1500 \ \to \ 0,95= P ( 0,95 < w(t) < 1,05 ) = P \left( 0,95 < \frac {a(t)}{a(t-1) } < 1,05 \right)$$
 
+
 **Problemas:**
 
-1) As magnitures de $a, b, c$ ainda interferem no aumento da incerteza.
+a) As magnitures de $a, b, c$ ainda interferem no aumento da incerteza.
 
-2) não sei se software lida bem com Gammas tendo parâmetros tão altos.
+b) não sei se software lida bem com Gammas tendo parâmetros tão altos.
 
 
 **Evolução multiplicativa com erros normais**
@@ -241,13 +242,15 @@ $a ( t ) = a ( t-1) \times w_a ( t )$, onde $ w_a ( t ) \sim Beta, \forall t$.
 
 Pode ser usado também para crescimento exponencial ($b=0$).
 
+
 **Vantagem:**
 
-- Permite contas exatas, dispensando aproximações MCMC.
+a) Permite contas exatas, dispensando aproximações MCMC.
+
 
 **Desvantagem:**
 
-- Não permite $b$ e $c$ dinâmicos.
+a) Não permite $b$ e $c$ dinâmicos.
 
 #### Generalizações da logística
 
@@ -255,8 +258,6 @@ Até agora, usamos a logística para especificar a média $\mu ( t )$ como
 $$\mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ ct \} }} = \frac{ a} { b + \exp { \{ - ct \} }}.$$
 Essa expressão é a forma mais simples da logística.
 
-Ela pode ser generalizada de várias formas.
-
-- Uma possível forma da **logística generalizada** é
+Ela pode ser generalizada de várias formas. Uma possível forma da **logística generalizada** é
 $$\mu ( t ) = d + \frac{ a - d} {(  b + \exp { \{ - ct \} } )^f}$$
 A logística é obtida fazendo $d=0$ e $f=1$.
