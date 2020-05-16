@@ -19,6 +19,7 @@ Dani Gamerman - Graduate Program in Statistics - UFMG
 (inspired on notes by José Marcos Andrade Figueiredo - UFMG)
 
 <br>
+
 #### Basic logistic growth model
 
 $$
@@ -34,25 +35,27 @@ where $Y(t)$ is the **cumulated number of confirmed cases** by day $t$ in a give
 
 - adequate for early stages of the pandemic.
 
-
 <br>
+
 ##### **Problems of the basic model:**
 
 a) data are **counts**, and the normal distribution assumes continuous data;
 
 b) variance should increase with data magnitude.
 
-
 <br>
+
 #### Characteristics of interest
 
 The most important characteristics are:
 
+<br>
 
 **1) Infection rate**
 
 - $c$ measures the acceleration of growth and reflects the infection rate of the disease.
 
+<br>
 
 **2) Assintote**
 
@@ -62,6 +65,7 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
 
 - Exponential growth ($b=0$): assintote $= \infty$ !
 
+<br>
 
 **3) Peak of the pandemic**
 
@@ -69,6 +73,7 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
 
 - Exponential growth  ($b=0$): number of new cases never stops growing!
 
+<br>
 
 **4) Prediction** 
 
@@ -77,6 +82,8 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
   Depends on the distribution of $Y( t)$ but will always be given by the predictive distribution of $Y(t+k)$ given $Y(1:t) = \{ Y( 1) , ... , Y( t ) \}$ - what was observed.
   
   Works as the posterior distribution of $Y(t + k )$.
+
+<br>
 
 **Useful result:** If $Z$ and $W$ are any 2 r. v.'s then:
 
@@ -87,6 +94,8 @@ $\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \}
   In particular, $E[Y ( t + k ) \mid Y( 1:t)] = E\{ E[ Y ( t + k ) \mid \mu( 1:t)] \mid Y( 1:t) \} = E[ \mu( t+k )] \mid Y( 1:t) ]$, the posterior mean of $\mu ( t + k )$.
 
   Inference about all that was described above should be reported through point estimators (eg: posterior means), along with respective credibility intervals.
+
+<br>
 
 **5) Reproducibility rate $R_0$**
 
@@ -102,6 +111,7 @@ At time $t$, it is defined as $R_0 = \frac {\mu ( t ) - \mu ( t-1)}{\mu ( t-1)} 
 
 For any fixed $t$, one can obtain its posterior distribution (via MCMC sample) and calculate mean, quantiles and credibility intervals.
 
+<br>
 
 **6) Mean number of new cases (MNNC)**
 
@@ -116,6 +126,7 @@ For any fixed $t$ and $k$, one can obtain its posterior distribution (via MCMC s
 ![Long Term Graph](FigApp.png Estimates and credibility intervals for the pandemic peak and for the total number of cases")
 
 <br>
+
 #### Alternatives:
 
 1.1) $Y( t ) \sim Poisson ( \mu ( t ) )$ with $E[ Y(t)] = \mu (t )$ and $Var(Y(t)) = \mu ( t )$
@@ -131,6 +142,7 @@ Observações:
 - Alternative (1.1) handles the two comments but does not allow overdispersion
 
 <br>
+
 ##### **Poisson with overdispersion**
 
 1.3) $Y( t ) \mid \epsilon ( t ) \sim Poisson ( \mu ( t ) + \epsilon ( t ) )$ with $E[  \epsilon (t)] = 0$ and $Var( \epsilon (t)) = \sigma^2$
@@ -157,6 +169,7 @@ Mod(1.4):
 Both preserve Poisson mean but increase Poisson dispersion.
 
 <br>
+
 #### Dynamic extensions 
 
 Previous models assume static behaviour:
@@ -168,6 +181,7 @@ Previous models assume static behaviour:
 **Dynamic models** make it flexible.
 
 <br>
+
 ##### 1. **Dynamic models**
 
 $\mu ( t ) =  \frac{ a( {\color{red} t )} \ \exp{ \{ c( {\color{red}t) } \  t \} } } {1 + b( {\color{red}t) } \ \exp { \{ c({\color{red}t) } \ t \} }}$
@@ -195,6 +209,7 @@ b) variances $W_a, W_b, W_c$ unknown $\Rightarrow$ difficult to estimate.
 c) it os not possible to simplify $W_a = W_b = W_c = W$ (different magnitudes of $(a,b,c)$).
 
 <br>
+
 ##### 2. **Multiplicative effect:**
 
 Another form to introduce dynamics, now **multiplicative**:
@@ -204,7 +219,6 @@ $a ( t ) = a ( t-1) \times w_a ( t )$, where $w_a ( t ) \sim Gamma ( d_a ,d_a ),
 $b ( t ) = b ( t-1) \times w_b ( t )$, where $w_b ( t ) \sim Gamma ( d_b ,d_b ), \forall t $.
 
 $c ( t ) = c ( t-1) \times w_c ( t )$, where $w_c ( t ) \sim Gamma ( d_c ,d_c ), \forall t $.
-
 
 **Advantages:**
 
@@ -218,13 +232,14 @@ Examples:
 $d=1000 \ \to \ 0,90= P ( 0,95 < w(t) < 1,05 ) = P \left( 0,95 < \frac {a(t)}{a(t-1) } < 1,05 \right)$
 $d=1500 \ \to \ 0,95= P ( 0,95 < w(t) < 1,05 ) = P \left( 0,95 < \frac {a(t)}{a(t-1) } < 1,05 \right)$
 
-**Problems:**
+**Disadvantages:**
 
 a) Magnitudes of $a, b, c$ still interfere in the increase in uncertainty.
 
 b) Not sure if free software works fine with Gammas with such high parameter values.
 
 <br>
+
 ##### 3. **Multiplicative evolution with normal errors**
 
 Consider the multiplicative evolution below for parameter $a$:
@@ -243,6 +258,7 @@ This implies $2 \sqrt{W_a} = 0,05$, that implies $\sqrt{W_a} = 0,025 \ \Rightarr
 The same specification is valid for $W_b$ and $W_c$, since magnitudes of $b$ and $c$ do not matter.
 
 <br>
+
 - **Special case**
 
 Based on Gamerman, Santos and Franco (J. Time Series Analysis, 2013):
@@ -260,17 +276,14 @@ a) Allows exact calculation, thus avoiding (MCMC) approximations.
 
 a) Does not allow dynamic $b$ and $c$.
 
+<br>
 
 #### Generalizations of the logistic curve
 
 So far, logistic curve was used to specify the mean $\mu ( t )$ as $\mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ ct \} }} = \frac{ a} { b + \exp { \{ - ct \} }}$.
 
-This expression is the simplest logistic form. It can be generalized in many ways.
-
-- One possible form of the **generalized logistic** is
+This expression is the simplest logistic form. It can be generalized in many ways. One possible form of the **generalized logistic** is
 $$\mu ( t ) = d + \frac{ a - d} {(  b + \exp { \{ - ct \} } )^f}$$
 
 The logistic curve is obtained by taking $d=0$ and $f=1$.
 
-<br>
-<br>
