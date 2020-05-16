@@ -53,7 +53,7 @@ As características mais importantes são:
 
 
 **2) Assíntota**
-$$\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a .\, \exp{ \{ c t \} } } {1 + b .\, \exp { \{ ct \} }} = \frac ab$$
+$$\lim_{t \to \infty}  \mu( t) = \lim_{t \to \infty} \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ ct \} }} = \frac ab$$
 - Reflete o total de casos acululados ao longo de toda a pandemia.
 
 - Crescimento exponencial ($b=0$): assíntota $= \infty$ !
