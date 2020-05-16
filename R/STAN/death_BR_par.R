@@ -110,7 +110,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
                          chains = number_chains,
                          init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
-                         control = list(max_treedepth = 15, adapt_delta=0.9),
+                         control = list(max_treedepth = 15, adapt_delta=0.995),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
   
   if(class(mod_sim) != "try-error"){
