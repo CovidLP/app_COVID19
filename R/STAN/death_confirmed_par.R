@@ -109,7 +109,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop)
   
   init <- list(
-    list(a = 1, b = log(1e-3), c = .15, f = 1)
+    list(a = 1, b1 = log(1), c = .5, f = 1)
   )
 
   mod_sim<- try(sampling(object = mod, data = data_stan,
@@ -117,7 +117,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
                          chains = number_chains,
                          init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
-                         control = list(max_treedepth = 15, adapt_delta=0.9),
+                         control = list(max_treedepth = 15, adapt_delta=0.995),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
   
 

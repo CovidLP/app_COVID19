@@ -110,7 +110,7 @@ L = 300
   data_stan = list(y=Y[[i]], n=t, L=L, pop=1.1*pop)
   
   init <- list(
-    list(a = 1, b1 = log(1e-3), c = .15, f = 1)
+    list(a = 1, b1 = log(1), c = .5, f = 1)
   )
 
   mod_sim<- try(sampling(object = mod, data = data_stan,
