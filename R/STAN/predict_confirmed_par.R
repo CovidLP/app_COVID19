@@ -101,7 +101,7 @@ L = 300
 #use static to provide initial values
   params = c("a","b","c","f","mu")
   
-  burn_in= 2e3
+  burn_in= 5e3
   lag= 3
   sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
@@ -154,7 +154,7 @@ if(class(mod_sim) != "try-error"){
   lt_predict <- lt_summary <- NULL
   
   #longterm
-  L0 = 200
+  L0 = 300
   
   #acha a curva de quantil 
   lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
