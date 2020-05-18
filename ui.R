@@ -214,11 +214,14 @@ shinyUI(
               h3("Contato/Contact:"),
               tags$a(href="mailto:danig@ufmg.br", "danig@ufmg.br"),
               h3("Equipe/Team:"),
+              h4("Professores/Faculty:"),
               p("Prof. Dani Gamerman - coordenador",br(),
                 "Prof. Marcos Prates",br(),
                 "Profa. Thaís Paiva",br(),
                 "Prof. Vinícius Mayrink"),
-              div(tags$b("Discentes do Programa de PG:"),br(),
+              h4("Alunas e alunos de Pós-Graduação/Graduate Students:"),
+              div(
+                # tags$b("Discentes do Programa de PG:"),br(),
                   "Ana Julia Alves Camara",br(),
                   "Danna Lesley Cruz Reyes",br(),
                   "Debora de Freitas Magalhaes",br(),
@@ -232,9 +235,11 @@ shinyUI(
                   "Ricardo Cunha Pedroso",br(),
                   "Thais Pacheco Menezes",br(),
                   "Vitor Faria de Carvalho Oliveira"),
-              div(tags$b("Doutora:"),br(),
-                  "Juliana Freitas De Mello E Silva"),
-              div(tags$b("Doutor:"),br(),
+            h4("Pesquisadores/Researchers:"),
+              div(
+                # tags$b("Doutora:"),br(),
+                  "Juliana Freitas De Mello E Silva",
+              # div(tags$b("Doutor:"),br(),
                   "Douglas R. Mesquita Azevedo")
             ),
             
