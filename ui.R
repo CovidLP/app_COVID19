@@ -97,7 +97,7 @@ shinyUI(
                 plotlyOutput("cumulatedMetrics")),
               # downloadButton("downloadData", label = "Download data", style = 'float: right; margin-bottom: 5%;')
               div(style= 'float: right; margin-bottom: 5%;',
-                  downloadBttn("downloadData", label = "Download data", size="xs")
+                  downloadBttn("downloadData", label = "Download data", size = "xs")
               )
             )
             
@@ -197,20 +197,58 @@ shinyUI(
           value = "teoria",
           
           ## Painel principal - output (pdf)
-          mainPanel(
-            #withMathJax(includeMarkdown("www/CoronaUFMG_MD.Rmd"))
-            column(
-              width = 12,
-              wellPanel(
-                fluidRow(
-                  downloadButton("material_covid", label = "Download", style = 'float: right; margin-right: 5%;')
-                ),
-                uiOutput("markdown")    
-              )
-            ) #,
-            # tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
-            # src="Covid19UFMG.pdf"))
+          tabsetPanel(
+            tabPanel(title = "Português",
+                     column(
+                       width = 6,
+                       wellPanel(
+                         fluidRow(
+                           div(style= 'float: right; margin-bottom: 5%;',
+                               downloadBttn("material_covid_pt", label = "Download", size = "xs")
+                           ),
+                           uiOutput("markdown_pt")
+                         )
+                       )
+                     )
+            ),
+            tabPanel(title = "English",
+                     column(
+                       width = 6,
+                       wellPanel(
+                         fluidRow(
+                           div(style = 'float: right; margin-bottom: 5%;',
+                               downloadBttn("material_covid_en", label = "Download", size = "xs")
+                           ),
+                           uiOutput("markdown_en")
+                         )
+                       )
+                     )
+            )
           )
+                
+          # mainPanel(
+          #   column(
+          #     width = 12,
+          #     wellPanel(
+          #       fluidRow(
+          #         # tabsetPanel(
+          #           # tabPanel(title = "Português",
+          #                    div(style= 'float: right; margin-bottom: 5%;',
+          #                        downloadBttn("material_covid", label = "Download", size = "xs")
+          #                    ),
+          #                    uiOutput("markdown")   
+          #           # ),
+          #           # tabPanel(title = "English",
+          #           #          div(style= 'float: right; margin-bottom: 5%;',
+          #           #              downloadBttn("material_covid", label = "Download", size = "xs")
+          #           #          ),
+          #           #          uiOutput("markdown")   
+          #           # )
+          #         )
+          #       # ) 
+          #     )
+          #   )
+          # )
         ),
         
         ## 5a aba

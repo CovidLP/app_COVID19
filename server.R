@@ -24,12 +24,21 @@ server = function(input, output, session) {
   ## Download
   ## Downloading methodology
   
-  output$material_covid <- downloadHandler(
+  output$material_covid_pt <- downloadHandler(
     filename = function() {
-      "theory.pdf"
+      "metodologia.pdf"
     },
     content = function(con) {
-      file.copy(from = "www/Covid19UFMG.pdf", con)
+      file.copy(from = "www/markdown/CoronaUFMG_MD_pt.pdf", con)
+    }
+  )
+  
+  output$material_covid_en <- downloadHandler(
+    filename = function() {
+      "methodology.pdf"
+    },
+    content = function(con) {
+      file.copy(from = "www/markdown/CoronaUFMG_MD_en.pdf", con)
     }
   )
   
@@ -39,8 +48,12 @@ server = function(input, output, session) {
   
   observeEvent(input$covid_navbar, {
     if(input$covid_navbar == "teoria"){
-      output$markdown <- renderUI({
-        withMathJax(includeMarkdown("www/CoronaUFMG_MD.Rmd"))
+      output$markdown_pt <- renderUI({
+        withMathJax(includeMarkdown("www/markdown/CoronaUFMG_MD_pt.Rmd"))
+      })
+      
+      output$markdown_en <- renderUI({
+        withMathJax(includeMarkdown("www/markdown/CoronaUFMG_MD_en.Rmd"))
       })
     }
   })
