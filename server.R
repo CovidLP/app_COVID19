@@ -325,6 +325,10 @@ server = function(input, output, session) {
         add_annotations(text=paste0("Atualizado em/Updated on ",printDate(last_date_n)),
                         x = 0.99, y = 0, xref="paper", yref="paper",
                         font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE) %>%
+        add_annotations(text="Source: www.est.ufmg.br/covidlp",
+                        x=0, y=0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10,color='rgba(128,128,128,0.5)'), align="left",
                         showarrow=FALSE)
       
       ## after, add lines for each metric from input
@@ -350,21 +354,22 @@ server = function(input, output, session) {
     })
   }
   
-  # ## add title bar with country name - New Cases
-  # output$plotTitle_daily <- renderUI({
-  #   title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
-  #   div(style='text-align:center; font-size:15px; 
-  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-  #       "Novos Casos/New Cases - ",title)
-  # })
-  # 
-  # ## add title bar with country name - Cumulated Cases
-  # output$plotTitle_cum <- renderUI({
-  #   title = paste0(input$country,ifelse(input$state == "<all>","",paste0(" / ",input$state)))
-  #   div(style= 'text-align:center; font-size:15px;
-  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold', 
-  #       "Casos Acumulados/Cumulated Cases - ",title)
-  # })
+  ## prepare observed data for download
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      ## get last date from observed data
+      data = data()
+      last_date_n = max(data$date)
+      paste0("Data_",input$country,
+             ifelse(input$state == "<all>","_",paste0("_",input$state,"_")),
+             format(last_date_n, format="%d%m%Y"), ".csv")
+    },
+    content = function(con) {
+      data = data() %>% select(-dateStr)
+      write.csv(data, con, row.names = FALSE)
+    }
+  )
+
   
   #########################
   ## Plot for ST prediction
@@ -433,6 +438,10 @@ server = function(input, output, session) {
                         #format(last_date_n, format="%d/%b")), # format="%d/%m/%Y")),
                         x = 0.99, y = 0, xref="paper", yref="paper",
                         font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE) %>%
+        add_annotations(text="Source: www.est.ufmg.br/covidlp",
+                        x=0, y=0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10,color='rgba(128,128,128,0.5)'), align="left",
                         showarrow=FALSE)
       
       plt = plt %>%
@@ -493,17 +502,29 @@ server = function(input, output, session) {
     })
   }
   
-  # ## add title bar with country name - ST prediction
-  # output$plotTitle <- renderUI({
-  #   title = paste0(input$country_STpred,
-  #                  ifelse(input$state_STpred == "<all>","",paste0(" / ",input$state_STpred)))
-  #   metric = ifelse(input$metrics_ST == "Confirmed", "Casos confirmados/Confirmed Cases",
-  #                   "Mortes/Deaths")
-  #   div(style= 'text-align:center; font-size:15px;
-  #       font-family:"Open Sans",arial,sans-serif; font-weight:bold',
-  #       metric, " - ",title
-  #   )
-  # })
+  ## prepare data for download - ST pred
+  output$downloadData_ST <- downloadHandler(
+    filename = function() {
+      ## get last date from prediction data
+      pred_n = pred_n()
+      last_date_n = min(pred_n$date)-1
+
+      paste0("STpred_",input$country_STpred,
+             ifelse(input$state_STpred == "<all>","",paste0("_",input$state_STpred)),
+             switch(input$metrics_ST, Deaths="_d_", Confirmed="_n_"),
+             format(last_date_n, format="%d%m%Y"), ".csv")
+    },
+    content = function(con) {
+      ## load observed & prediction data
+      data = data_pred() %>% select(date,paste0("Cum",input$metrics_ST))
+      pred_n = pred_n() %>% select(-m) %>% # remove column 'm'
+        mutate_at(2:4, round, 0) %>% # round columns
+        rename_at(2:4 ,function(x){paste0("Pred_", x)}) # add 'Pred' prefix to prediction columns
+      data.out = bind_rows(data, pred_n) # combine obs data & prediction by 'date'
+      write.csv(data.out, con, row.names = FALSE)
+    }
+  )
+
   
   #########################
   ## Plot for LT prediction
@@ -603,17 +624,16 @@ server = function(input, output, session) {
                         #format(last_date_n, format="%d/%b")), # format="%d/%m/%Y")),
                         x = 0.99, y = 0, xref="paper", yref="paper",
                         font=list(family="Arial",size=10), align="right",
+                        showarrow=FALSE) %>%
+        add_annotations(text="Source: www.est.ufmg.br/covidlp",
+                        x=0, y=0, xref="paper", yref="paper",
+                        font=list(family="Arial",size=10,color='rgba(128,128,128,0.5)'), align="left",
                         showarrow=FALSE)
       
-      
-      # browser()
       plt = plt %>%
         ## add mu line
         add_trace(
-          # x=c(data$date[-c(1:(length(data$date)+length(pred_n$date)-length(mu_plot)))],
-          #     pred_n$date),
           x = mu_plot$date, y = mu_plot$mu,
-          # y=c(mu_plot),
           type='scatter', mode='lines', hoverinfo="none", # "x+y",
           # name=paste(metric_pt, "Estimated Mean"),
           name=("Estimated Mean"),
@@ -680,18 +700,60 @@ server = function(input, output, session) {
     })
   }
   
-  ## Add title bar with country name - LT prediction
-  output$plotTitle_LT <- renderUI({
-    title = paste0(input$country_LTpred,
-                   ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
-    metric = ifelse(input$metrics_LT == "Confirmed", "Casos confirmados/Confirmed Cases",
-                    "Mortes/Deaths")
-    div(style= 'text-align:center; font-size:15px;
-        font-family:"Open Sans",arial,sans-serif; font-weight:bold',
-        metric, " - ",title
-    )
-  })
+  ## prepare data for download - LT pred
+  output$downloadData_LT <- downloadHandler(
+    filename = function() {
+      ## get last date from prediction data
+      pred_n = predLT_n()
+      last_date_n = min(pred_n$lt_predict$date)-1
+      
+      paste0("LTpred_",input$country_LTpred,
+             ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
+             switch(input$metrics_LT, Deaths="_d_", Confirmed="_n_"),
+             format(last_date_n, format="%d%m%Y"), ".csv")
+    },
+    content = function(con) {
+      ## load observed & prediction data
+      data = data_predLT() %>% select(date,paste0("New",input$metrics_LT))
+      aux = predLT_n()
+      pred_n = aux$lt_predict %>% select(-m) %>% # remove column 'm'
+        mutate_at(2:4, round, 0) %>% # round columns
+        rename_at(2:4 ,function(x){paste0("Pred_", x)}) # add 'Pred' prefix to prediction columns
+      if(aux$flag==1) pred_n = pred_n %>% select(-c("Pred_q25","Pred_q975"))
+      data.out = bind_rows(data, pred_n) # combine obs data & prediction by 'date'
+      data.out = inner_join(data.out, aux$mu_plot)
+      write.csv(data.out, con, row.names = FALSE)
+    }
+  )
   
+  ## prepare data for download - LT pred summary
+  output$downloadData_LTsummary <- downloadHandler(
+    filename = function() {
+      ## get last date from prediction data
+      pred_n = predLT_n()
+      last_date_n = min(pred_n$lt_predict$date)-1
+      
+      paste0("LTpredSummary_",input$country_LTpred,
+             ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
+             switch(input$metrics_LT, Deaths="_d_", Confirmed="_n_"),
+             format(last_date_n, format="%d%m%Y"), ".csv")
+    },
+    content = function(con) {
+      ## load observed & prediction data
+      # data = data_predLT() %>% select(date,paste0("New",input$metrics_LT))
+      aux = predLT_n()
+      summary = aux$lt_summary
+      summary$NTC500 = round(summary$NTC500,0)
+      if(aux$flag!=1){
+        summary$NTC25 = round(summary$NTC25,0)
+        summary$NTC975 = round(summary$NTC975,0)
+      }
+      summary = lapply(summary, function(x) ifelse(is.null(x),"NA",x))
+      write.csv(summary, con, row.names = FALSE)
+    }
+  )
+  
+
   ## hide plot -> if lt_summary$flag=2
   ## observeEvent(c(input$country_LTpred, input$state_LTpred), {
   observe({

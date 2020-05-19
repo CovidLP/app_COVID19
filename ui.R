@@ -61,7 +61,7 @@ shinyUI(
         
         ## Nome do app
         # "Previsão de curto e longo prazo para COVID-19", # sigla?
-        "CovidLP",
+        HTML("<b>CovidLP</b>"),
         
         ########################################
         ## 1a aba
@@ -89,14 +89,16 @@ shinyUI(
             
             ## Painel principal - output (gráficos)
             mainPanel(
-              # uiOutput("plotTitle_daily"),
               p("Novos casos/New cases:", style="text-align:left"),
               withSpinner( # add spinner while loading
                 plotlyOutput("dailyMetrics")),
-              # uiOutput("plotTitle_cum"),
               p("Casos acumulados/Cumulated cases:", style="text-align:left"),
               withSpinner(
-                plotlyOutput("cumulatedMetrics"))
+                plotlyOutput("cumulatedMetrics")),
+              # downloadButton("downloadData", label = "Download data", style = 'float: right; margin-bottom: 5%;')
+              div(style= 'float: right; margin-bottom: 5%;',
+                  downloadBttn("downloadData", label = "Download data", size="xs")
+              )
             )
             
           )
@@ -129,10 +131,13 @@ shinyUI(
             ## painel principal - output (gráficos)
             mainPanel(
               p("Em desenvolvimento/Under development", style="font-size:80%;"),
-              # uiOutput("plotTitle"),
               p("Previsão de casos acumulados/Prediction of cumulated cases:", style="text-align:left"),
               withSpinner( # add spinner while loading
-                plotlyOutput("STpred"))  # gráfico previsão curto prazo
+                plotlyOutput("STpred")),  # gráfico previsão curto prazo
+              # downloadButton("downloadData_ST", label = "Download data", style = 'float: right; margin-bottom: 5%;')
+              div(style= 'float: right; margin-bottom: 5%;',
+                  downloadBttn("downloadData_ST", label = "Download data", size="xs")
+              )
             )  
             
           )
@@ -161,7 +166,6 @@ shinyUI(
             ## painel principal - output (gráficos)
             mainPanel(
               p("Em desenvolvimento/Under development", style="font-size:80%;"), # font-family:arial"),
-              # uiOutput("plotTitle_LT"),
               p("Previsão de novos casos/Prediction of new cases:", style="text-align:left"),
               ## condition to hide/show plot depending on the flag
               shinyjs::hidden(selectInput(inputId = "show_plotLT", label = "",               
@@ -170,7 +174,13 @@ shinyUI(
               conditionalPanel("input.show_plotLT == 'TRUE'",       
                                withSpinner( # add spinner while loading
                                  plotlyOutput("LTpred")  # gráfico previsão longo prazo
+                               ),
+                               # downloadButton("downloadData_LT", label = "Download data", style = 'float: right; margin-bottom: 5%; margin-right: 5%'),
+                               div(style= 'float: right; margin-bottom: 5%;',
+                                   downloadBttn("downloadData_LT", label = "Download data", size="xs"),
+                                   downloadBttn("downloadData_LTsummary", label = "Download summary", size="xs")
                                )
+                               # downloadButton("downloadData_LTsummary", label = "Download summary", style = 'float: right; margin-bottom: 5%;')
               ),
               conditionalPanel("input.show_plotLT == 'FALSE'",     
                                div(style= 'text-align:left; font-size:15px;
@@ -197,7 +207,7 @@ shinyUI(
                 ),
                 uiOutput("markdown")    
               )
-            ),
+            ) #,
             # tags$iframe(style="width:100%; height:500px; scrolling=auto; align:middle", 
             # src="Covid19UFMG.pdf"))
           )
@@ -256,6 +266,7 @@ shinyUI(
               p("In the current configuration, the application has two main types of results:",tags$b("short-term and long-term predictions.")," The first refers to prediction of number of deaths and confirmed cases for the immediate future (up to 1 to 2 weeks). The second type of forecast is more comprehensive and aims to provide a full picture of the pandemic: when will the number of cases stop growing and start to decline? How many people will get sick? When can we expect the pandemic to end?"),
               p(tags$b("Our forecasts are updated daily,"),"and may change based on new data that arrives every day. The predictions are accompanied by the respective probability intervals (or credibility, in statistical jargon) so that the user is always aware of the true uncertainty associated with each forecast provided. Another important point is that the predictions are always based on the maintenance of conditions on the day the forecast was made, including isolation conditions. Changes on these conditions can cause substantial alterations on the predictions."),
               p("For more information, check the Theoretical Foundation tab and access ",a(href="http://www.statpop.com.br/2020/04/previsao-de-curto-e-longo-prazos-da_30.html", "www.statpop.com.br.")),
+              
               ###########
               hr(),
               h3("Na mídia/In the news:"),
@@ -263,6 +274,14 @@ shinyUI(
               p("05/05/2020 - ",a(href="https://ufmg.br/comunicacao/noticias/aplicativos-projetam-infeccoes-e-mortes-pelo-coronavirus-em-longo-prazo", "Notícia no site da UFMG")),
               p("04/05/2020 - ",a(href="https://www.hojeemdia.com.br/primeiro-plano/estudo-da-ufmg-projeta-pico-de-casos-da-covid-19-no-brasil-para-o-dia-18-deste-m%C3%AAs-1.785365", "Matéria no Jornal Hoje em Dia")),
               p("01/05/2020 - ",a(href="https://www.itatiaia.com.br/noticia/especialistas-revelam-que-minas-gerais-ja-pod", "Entrevista na Rádio Itatiaia")),
+              
+              ###########
+              hr(),
+              h3("Próximos eventos/Upcoming events:"),
+              fluidRow(
+                div(img(src="event_2105.jpg", align="left", width="300px"))
+              ),
+              br(),
               
               ########
               ## add disqus for comments

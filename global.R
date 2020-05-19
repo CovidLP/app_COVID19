@@ -10,6 +10,7 @@ library(plotly)
 library(shinythemes)
 library(shinycssloaders)
 library(markdown)
+library(shinyWidgets)
 
 ##############################################################################
 
