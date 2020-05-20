@@ -1,20 +1,14 @@
 ---
 title: "Modelando a pandemia de Covid19"
 author: "Dani Gamerman"
-# output: slidy_presentation
-output: 
- html_document:
-   toc: true
-   # toc_depth: 5
-   # toc_float: true
+output:
+  html_document:
+    toc: yes
 ---
-
 
 ### Modelando a pandemia de Covid19
  
 Dani Gamerman - Programa de PG em Estatística - UFMG
-
-<!-- <span style="color:red">1º semestre de 2020 </span> -->
 
 *1º semestre de 2020*
 
@@ -31,7 +25,7 @@ onde $Y(t)$ é o número de casos acumulados até o dia $t$ em uma dada região,
 $$
 \mu ( t ) = \frac{ a \exp{ \{ c t \} } } {1 + b \exp { \{ c t \} }}.
 $$
-**Caso especial:** $b = 0$ (crescimento exponencial) $ \rightarrow \mu(t) = a \exp \{ ct \} $.
+**Caso especial:** $b = 0$ (crescimento exponencial) $\rightarrow \mu(t) = a \exp \{ ct \}$.
 
 - Adequado para os estágios iniciais da pandemia
 
@@ -115,8 +109,7 @@ Logo, NMNC também é função dos parâmetros $(a,b,c)$ e pode ser facilmente c
 
 Para cada $t$ e $k$ fixados, podemos obter sua distribuição a posteriori (via amostra MCMC) e calcular média, quantis e intervalos de credibilidade.
 
-![Long Term Graph](FigApp.png "Estimativas e Intervalo de Credibilidade para o pico da pandemia e para o total de casos")
-
+<center><img src = "../FigApp.png" style = "max-width:100%"></center>
 
 #### Alternativas
 
@@ -165,11 +158,11 @@ infecção será sempre a mesma, assintota será sempre a mesma, \...
 $$\mu ( t ) =  \frac{ a( {\color{red} t )} \ \exp{ \{ c( {\color{red}t) } \  t \} } } {1 + b( {\color{red}t) } \ \exp { \{ c({\color{red}t) } \ t \} }}$$
 
 com:
-$a ( t ) = a ( t-1) + w_a ( t )$, onde $w_a ( t ) \sim N ( 0 , W_a ), \forall t $.
+$a ( t ) = a ( t-1) + w_a ( t )$, onde $w_a ( t ) \sim N ( 0 , W_a ), \forall t$.
 
-$b ( t ) = b ( t-1) + w_b ( t )$, onde $w_b ( t ) \sim N ( 0 , W_b ), \forall t $.
+$b ( t ) = b ( t-1) + w_b ( t )$, onde $w_b ( t ) \sim N ( 0 , W_b ), \forall t$.
 
-$c ( t ) = c ( t-1) + w_c ( t )$, onde $w_c ( t ) \sim N ( 0 , W_c ), \forall t $.
+$c ( t ) = c ( t-1) + w_c ( t )$, onde $w_c ( t ) \sim N ( 0 , W_c ), \forall t$.
 
 
 **Vantagens:**
@@ -188,11 +181,11 @@ c) não dá para simplificar $W_a = W_b = W_c = W$ (magnitudes diferentes de $(a
 
 - Outra forma de introduzir dinamismo, agora multiplicativo:
 
-$a ( t ) = a ( t-1) \times w_a ( t )$, onde $w_a ( t ) \sim Gamma ( d_a ,d_a ), \forall t $.
+$a ( t ) = a ( t-1) \times w_a ( t )$, onde $w_a ( t ) \sim Gamma ( d_a ,d_a ), \forall t$.
 
-$b ( t ) = b ( t-1) \times w_b ( t )$, onde $w_b ( t ) \sim Gamma ( d_b ,d_b ), \forall t $.
+$b ( t ) = b ( t-1) \times w_b ( t )$, onde $w_b ( t ) \sim Gamma ( d_b ,d_b ), \forall t$.
 
-$c ( t ) = c ( t-1) \times w_c ( t )$, onde $w_c ( t ) \sim Gamma ( d_c ,d_c ), \forall t $.
+$c ( t ) = c ( t-1) \times w_c ( t )$, onde $w_c ( t ) \sim Gamma ( d_c ,d_c ), \forall t$.
 
 
 **Vantagens:**
@@ -238,7 +231,7 @@ Mesma especificação vale para $W_b$ e $W_c$, pois dimensões de $b$ e $c$ não
 Baseado em Gamerman, Santos e Franco (J. Time Series Analysis, 2013):
 
 $$\mu ( t ) =  \frac{ a( {\color{red}t)} \ \exp{ \{ c \  t \} } } {1 + b \ \exp { \{ c \ t \} }}$$
-$a ( t ) = a ( t-1) \times w_a ( t )$, onde $ w_a ( t ) \sim Beta, \forall t$.
+$a ( t ) = a ( t-1) \times w_a ( t )$, onde $w_a ( t ) \sim Beta, \forall t$.
 
 Pode ser usado também para crescimento exponencial ($b=0$).
 
