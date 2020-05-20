@@ -270,6 +270,7 @@ shinyUI(
               ###########
               hr(),
               h3("Na mídia/In the news:"),
+              p("13/05/2020 - ",a(href="https://bahiaeconomica.com.br/wp/2020/05/13/estudo-diz-que-bahia-atingira-o-pico-da-pandemia-em-meados-de-junho-e-especialista-preve-para-julho-o-fim-do-isolamento/", "Notícia no site Bahia Econômica")),
               p("08/05/2020 - ",a(href="https://www.jetro.go.jp/biznews/2020/05/c9c4655a1215521d.html", "Notícia no site Jetro Japão")),
               p("05/05/2020 - ",a(href="https://ufmg.br/comunicacao/noticias/aplicativos-projetam-infeccoes-e-mortes-pelo-coronavirus-em-longo-prazo", "Notícia no site da UFMG")),
               p("04/05/2020 - ",a(href="https://www.hojeemdia.com.br/primeiro-plano/estudo-da-ufmg-projeta-pico-de-casos-da-covid-19-no-brasil-para-o-dia-18-deste-m%C3%AAs-1.785365", "Matéria no Jornal Hoje em Dia")),
@@ -280,8 +281,9 @@ shinyUI(
               h3("Próximos eventos/Upcoming events:"),
               fluidRow(
                 div(img(src="event_2105.jpg", align="left", width="300px"))
-              ),
-              br(),
+              ),br(),
+              p(tags$b("22/05/2020 às 14:00 - Mesa Redonda \"Propagação de Epidemias\"")," - Dani Gamerman (UFMG), Florencia Leonardi (USP), Leo Bastos (Fiocruz), Tiago Pereira (USP) - ",a(href="http://www.pipges.ufscar.br/", "PIPGES-UFSCar-USP")),
+              # br(),
               
               ########
               ## add disqus for comments
