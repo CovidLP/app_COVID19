@@ -93,7 +93,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   
   params = c("a","b","c","f","mu")
   
-  burn_in= 5se3
+  burn_in= 5e3
   lag= 3
   sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
@@ -157,8 +157,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     
     
     ##flag
-    cm <- pop * 0.025 * 0.12
-    ch <- pop * 0.03 * 0.15
+    cm <- pop * 0.03 * 0.12
+    ch <- pop * 0.035 * 0.15
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
