@@ -373,8 +373,8 @@ server = function(input, output, session) {
       ## get last date from observed data
       data = data()
       last_date_n = max(data$date)
-      paste0("Data_",input$country,
-             ifelse(input$state == "<all>","_",paste0("_",input$state,"_")),
+      paste0("Data_",isolate(input$country),
+             ifelse(isolate(input$state) == "<all>","_",paste0("_",isolate(input$state),"_")),
              format(last_date_n, format="%d%m%Y"), ".csv")
     },
     content = function(con) {
@@ -522,14 +522,14 @@ server = function(input, output, session) {
       pred_n = pred_n()
       last_date_n = min(pred_n$date)-1
 
-      paste0("STpred_",input$country_STpred,
-             ifelse(input$state_STpred == "<all>","",paste0("_",input$state_STpred)),
-             switch(input$metrics_ST, Deaths="_d_", Confirmed="_n_"),
+      paste0("STpred_",isolate(input$country_STpred),
+             ifelse(isolate(input$state_STpred) == "<all>","",paste0("_",isolate(input$state_STpred))),
+             switch(isolate(input$metrics_ST), Deaths="_d_", Confirmed="_n_"),
              format(last_date_n, format="%d%m%Y"), ".csv")
     },
     content = function(con) {
       ## load observed & prediction data
-      data = data_pred() %>% select(date,paste0("Cum",input$metrics_ST))
+      data = data_pred() %>% select(date,paste0("Cum",isolate(input$metrics_ST)))
       pred_n = pred_n() %>% select(-m) %>% # remove column 'm'
         mutate_at(2:4, round, 0) %>% # round columns
         rename_at(2:4 ,function(x){paste0("Pred_", x)}) # add 'Pred' prefix to prediction columns
@@ -720,14 +720,14 @@ server = function(input, output, session) {
       pred_n = predLT_n()
       last_date_n = min(pred_n$lt_predict$date)-1
       
-      paste0("LTpred_",input$country_LTpred,
-             ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
-             switch(input$metrics_LT, Deaths="_d_", Confirmed="_n_"),
+      paste0("LTpred_",isolate(input$country_LTpred),
+             ifelse(isolate(input$state_LTpred) == "<all>","",paste0("_",isolate(input$state_LTpred))),
+             switch(isolate(input$metrics_LT), Deaths="_d_", Confirmed="_n_"),
              format(last_date_n, format="%d%m%Y"), ".csv")
     },
     content = function(con) {
       ## load observed & prediction data
-      data = data_predLT() %>% select(date,paste0("New",input$metrics_LT))
+      data = data_predLT() %>% select(date,paste0("New",isolate(input$metrics_LT)))
       aux = predLT_n()
       pred_n = aux$lt_predict %>% select(-m) %>% # remove column 'm'
         mutate_at(2:4, round, 0) %>% # round columns
@@ -746,9 +746,9 @@ server = function(input, output, session) {
       pred_n = predLT_n()
       last_date_n = min(pred_n$lt_predict$date)-1
       
-      paste0("LTpredSummary_",input$country_LTpred,
-             ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
-             switch(input$metrics_LT, Deaths="_d_", Confirmed="_n_"),
+      paste0("LTpredSummary_",isolate(input$country_LTpred),
+             ifelse(isolate(input$state_LTpred) == "<all>","",paste0("_",isolate(input$state_LTpred))),
+             switch(isolate(input$metrics_LT), Deaths="_d_", Confirmed="_n_"),
              format(last_date_n, format="%d%m%Y"), ".csv")
     },
     content = function(con) {

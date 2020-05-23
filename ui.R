@@ -89,10 +89,21 @@ shinyUI(
             
             ## Painel principal - output (gráficos)
             mainPanel(
-              p("Novos casos/New cases:", style="text-align:left"),
+              fluidRow(
+                div("Novos casos/New cases:", style="text-align:left; display:inline-block;") #,
+                # div(class = "btn_div", style="text-align:left; display:inline-block;",
+                #     popify(bsButton("pB2", "?", style = "inverse", size = "extra-small"), HTML(("Todos os pontos podem ter os valores numéricos e as datas revelados ao passar o mouse sobre eles. <br>Os pontos azuis/vermelhos indicam os novos dados observados a cada dia de casos confirmados/mortes.")))
+                # )
+              ),
               withSpinner( # add spinner while loading
                 plotlyOutput("dailyMetrics")),
-              p("Casos acumulados/Cumulated cases:", style="text-align:left"),
+              # p("Casos acumulados/Cumulated cases:", style="text-align:left"),
+              fluidRow(
+                div("Casos acumulados/Cumulated cases:", style="text-align:left; display:inline-block;") #,
+                # div(class = "btn_div", style="text-align:left; display:inline-block;",
+                #     tipify(bsButton("pB3", "?", style = "inverse", size = "extra-small"), HTML(("Os pontos azuis/vermelhos indicam os dados acumulados a cada dia de casos confirmados/mortes.")))
+                # )
+              ),
               withSpinner(
                 plotlyOutput("cumulatedMetrics")),
               # downloadButton("downloadData", label = "Download data", style = 'float: right; margin-bottom: 5%;')
