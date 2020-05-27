@@ -26,14 +26,6 @@ shinyUI(
           width = 3, 
           tags$a(href="https://est.ufmg.br",
                  tags$img(src="logoestatistica.png", title="DEST/UFMG", height="45")),
-          # tags$a(                                                     
-          #   href = "https://github.com/thaispaiva/app_COVID19",       
-          #   icon("github")                                            ## ATUALIZAR
-          # ),                                                          
-          # tags$a(href="https://github.com/thaispaiva/app_COVID19",
-          #        div(h5("Código Fonte/Source Code"))),
-          # tags$img(src="www/GitHub-Mark-32px.png",
-          #          title="GitHub", height="5"))),
           style = "transform: translate(0%, 22%);"
         )
       ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
@@ -45,11 +37,7 @@ shinyUI(
       
       ## js file to add github logo to navbar
       tags$head(tags$script(type="text/javascript", src = "code.js", ".tab-content")),
-      #       tags$script(HTML("var header = $('.navbar > .container-fluid');
-      # header.append('<div style=\"float:right\"><a href=\"https://github.com/thaispaiva/app_COVID19\"><img src=\"www/GitHub-Mark-Light-32px.png\" alt=\"alt\" style=\"float:right;width:33px;height:41px;padding-top:10px;\"> </a>`</div>');
-      #                        console.log(header)")
-      #       ),
-      
+
       navbarPage(
         
         ## Tema do layout
@@ -60,7 +48,6 @@ shinyUI(
         selected = "dados",
         
         ## Nome do app
-        # "Previsão de curto e longo prazo para COVID-19", # sigla?
         HTML("<b>CovidLP</b>"),
         
         ########################################
@@ -186,12 +173,10 @@ shinyUI(
                                withSpinner( # add spinner while loading
                                  plotlyOutput("LTpred")  # gráfico previsão longo prazo
                                ),
-                               # downloadButton("downloadData_LT", label = "Download data", style = 'float: right; margin-bottom: 5%; margin-right: 5%'),
                                div(style= 'float: right; margin-bottom: 5%;',
                                    downloadBttn("downloadData_LT", label = "Download data", size="xs"),
                                    downloadBttn("downloadData_LTsummary", label = "Download summary", size="xs")
                                )
-                               # downloadButton("downloadData_LTsummary", label = "Download summary", style = 'float: right; margin-bottom: 5%;')
               ),
               conditionalPanel("input.show_plotLT == 'FALSE'",     
                                div(style= 'text-align:left; font-size:15px;
@@ -236,30 +221,6 @@ shinyUI(
                      )
             )
           )
-                
-          # mainPanel(
-          #   column(
-          #     width = 12,
-          #     wellPanel(
-          #       fluidRow(
-          #         # tabsetPanel(
-          #           # tabPanel(title = "Português",
-          #                    div(style= 'float: right; margin-bottom: 5%;',
-          #                        downloadBttn("material_covid", label = "Download", size = "xs")
-          #                    ),
-          #                    uiOutput("markdown")   
-          #           # ),
-          #           # tabPanel(title = "English",
-          #           #          div(style= 'float: right; margin-bottom: 5%;',
-          #           #              downloadBttn("material_covid", label = "Download", size = "xs")
-          #           #          ),
-          #           #          uiOutput("markdown")   
-          #           # )
-          #         )
-          #       # ) 
-          #     )
-          #   )
-          # )
         ),
         
         ## 5a aba
@@ -280,7 +241,6 @@ shinyUI(
                 "Prof. Vinícius Mayrink"),
               h4("Alunas e alunos de Pós-Graduação/Graduate Students:"),
               div(
-                # tags$b("Discentes do Programa de PG:"),br(),
                   "Ana Julia Alves Camara",br(),
                   "Danna Lesley Cruz Reyes",br(),
                   "Debora de Freitas Magalhaes",br(),
@@ -296,9 +256,7 @@ shinyUI(
                   "Vitor Faria de Carvalho Oliveira"),
             h4("Pesquisadores/Researchers:"),
               div(
-                # tags$b("Doutora:"),br(),
-                  "Juliana Freitas De Mello E Silva",
-              # div(tags$b("Doutor:"),br(),
+                  "Juliana Freitas De Mello E Silva",br(),
                   "Douglas R. Mesquita Azevedo")
             ),
             
@@ -327,11 +285,16 @@ shinyUI(
               
               ###########
               hr(),
-              h3("Próximos eventos/Upcoming events:"),
-              fluidRow(
-                div(img(src="event_2105.jpg", align="left", width="300px"))
-              ),br(),
+              h3("Eventos/Events:"),
+              p(tags$b("03/06/2020 às 14:00 - Seminários DEST/UFMG - \"CovidLP: um aplicativo para previsão de curto e longo prazos para COVID-19\"")," - Marcos Prates e Thaís Paiva - ",a(href="http://est.ufmg.br/portal/seminarios/covid-19", "Seminários - DEST")),
+              p(tags$b("29/05/2020 (horário a confirmar) - VI Encontro Comemorativo do Dia do Estatístico: Estatística no Contexto da COVID-19 (Webinar)")," - Juliana Freitas De Mello E Silva - ",a(href="http://est.ufmg.br/portal/seminarios/covid-19", "Seminários - DEST")),
+              p(tags$b("28/05/2020 às 17:00 - Workshop \"ABE e COVID-19: Ações e Desafios\"")," - Dani Gamerman (UFMG) - ",a(href="https://us02web.zoom.us/meeting/register/tZckcuiqqDIqGtUUI-9typLVhg8-7U4qhqPX", "Link para se registrar")),
+              # br(),
               p(tags$b("22/05/2020 às 14:00 - Mesa Redonda \"Propagação de Epidemias\"")," - Dani Gamerman (UFMG), Florencia Leonardi (USP), Leo Bastos (Fiocruz), Tiago Pereira (USP) - ",a(href="http://www.pipges.ufscar.br/", "PIPGES-UFSCar-USP")),
+              fluidRow(
+                div(a(href="https://www.youtube.com/watch?v=lJ0KDVCFZIY",img(src="event_2105.jpg", align="left", width="300px"))) ),
+              br(),
+              
               # br(),
               
               ########
