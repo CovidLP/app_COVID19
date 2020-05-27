@@ -93,7 +93,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   
   params = c("a","b","c","f","mu")
   
-  burn_in= 5e3
+  burn_in= 2e3
   lag= 3
   sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
@@ -102,7 +102,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop)  
   
   init <- list(
-    list(a = 1, b1 = log(1), c = .5, f = 1)
+    list(a = 100, b1 = log(1), c = .5, f = 1)
   )
 
   mod_sim<- try(sampling(object = mod, data = data_stan,
@@ -146,19 +146,29 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     #longterm
     L0 = 300
     
-    #acha a curva de quantil 
-    lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
-    medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
-    highquant <- colQuantiles(mod_chain_y[,1:L0], prob=.975)
-    
+    if(Y[[3]][t] > 1000){
+      #acha a curva de quantil 
+      lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
+      medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
+      highquant <- colQuantiles(mod_chain_y[,1:L0], prob=.975)
+    }
+    else{
+      lowquant <- c(Y[[3]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.025))
+      lowquant <- (lowquant-lag(lowquant,default=0))[-1]
+      medquant <- c(Y[[3]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.5))
+      medquant <- (medquant-lag(medquant,default=0))[-1]
+      highquant <- c(Y[[3]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.975))
+      highquant <- (highquant-lag(highquant,default=0))[-1]
+    }
+
     NTC25 =sum(lowquant)+Y[[3]][t]
     NTC500=sum(medquant)+Y[[3]][t]
     NTC975=sum(highquant)+Y[[3]][t]
     
     
     ##flag
-    cm <- pop * 0.03 * 0.12
-    ch <- pop * 0.035 * 0.15
+    cm <- pop * 0.05 * 0.12
+    ch <- pop * 0.055 * 0.15
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
