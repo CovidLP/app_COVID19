@@ -256,8 +256,9 @@ shinyUI(
                   "Vitor Faria de Carvalho Oliveira"),
             h4("Pesquisadores/Researchers:"),
               div(
-                  "Juliana Freitas De Mello E Silva",br(),
-                  "Douglas R. Mesquita Azevedo")
+                "Douglas R. Mesquita Azevedo", br(), 
+                "Guido Alberti Moreira", br(),
+                "Juliana Freitas De Mello E Silva")
             ),
             
             ## painel principal 
@@ -287,8 +288,8 @@ shinyUI(
               hr(),
               h3("Eventos/Events:"),
               p(tags$b("03/06/2020 às 14:00 - Seminários DEST/UFMG - \"CovidLP: um aplicativo para previsão de curto e longo prazos para COVID-19\"")," - Marcos Prates e Thaís Paiva - ",a(href="http://est.ufmg.br/portal/seminarios/covid-19", "Seminários - DEST")),
-              p(tags$b("29/05/2020 (horário a confirmar) - VI Encontro Comemorativo do Dia do Estatístico: Estatística no Contexto da COVID-19 (Webinar)")," - Juliana Freitas De Mello E Silva - ",a(href="http://est.ufmg.br/portal/seminarios/covid-19", "Seminários - DEST")),
-              p(tags$b("28/05/2020 às 17:00 - Workshop \"ABE e COVID-19: Ações e Desafios\"")," - Dani Gamerman (UFMG) - ",a(href="https://us02web.zoom.us/meeting/register/tZckcuiqqDIqGtUUI-9typLVhg8-7U4qhqPX", "Link para se registrar")),
+              p(tags$b("29/05/2020 às 14:00 - VI Encontro Comemorativo do Dia do Estatístico: Estatística no Contexto da COVID-19 (Webinar)")," - Juliana Freitas De Mello E Silva - ",a(href="http://est.ufmg.br/portal/seminarios/covid-19", "Seminários - DEST")),
+              p(tags$b("28/05/2020 às 17:00 - Workshop \"ABE e COVID-19: Ações e Desafios\"")," - Dani Gamerman (UFMG) - ", a(href = "https://us02web.zoom.us/meeting/register/tZckcuiqqDIqGtUUI-9typLVhg8-7U4qhqPX", "Link para se registrar")),
               # br(),
               p(tags$b("22/05/2020 às 14:00 - Mesa Redonda \"Propagação de Epidemias\"")," - Dani Gamerman (UFMG), Florencia Leonardi (USP), Leo Bastos (Fiocruz), Tiago Pereira (USP) - ",a(href="http://www.pipges.ufscar.br/", "PIPGES-UFSCar-USP")),
               fluidRow(
