@@ -106,7 +106,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop, perPop=0.025*pop)
   
   init <- list(
     list(a = 100, b1 = log(1), c = .5, f = 1)
@@ -133,7 +133,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     yfut_pos = paste0("yfut[",1:L,"]")
 
     source("posterior_sample.R")
-    fut <- predL(L=L,t,pop*0.01,Y[[3]][t],c(mod_chain[[a_pos]]),c(mod_chain[[b_pos]]),c(mod_chain[[c_pos]]),c(mod_chain[[f_pos]]))
+    fut <- predL(L=L,t,pop*0.025,Y[[3]][t],c(mod_chain[[a_pos]]),c(mod_chain[[b_pos]]),c(mod_chain[[c_pos]]),c(mod_chain[[f_pos]]))
     
     mod_chain_y = fut$y.fut
     #mod_chain_y = as.matrix(mod_chain[yfut_pos])

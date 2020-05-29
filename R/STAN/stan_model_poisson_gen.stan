@@ -13,12 +13,13 @@ data {
   int<lower=0> y[n]; // counts of new cases
   int<lower=1> L;     // number of predictions
   real pop;
+  real<lower=0,upper=1> perPop;
   //-----------------------------
 }
 
 
 parameters { 
-  real<lower=0> a;  
+  real<lower=0, upper=perPop*pop*exp(f*b1)> a; 
 
   //real<lower=0> b; 
   real<lower=-30> b1;

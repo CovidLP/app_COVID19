@@ -101,7 +101,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=1.1*pop)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=pop, perPop=0.1)
   
   init <- list(
     list(a = 100, b1 = log(1), c = .5, f = 1)
