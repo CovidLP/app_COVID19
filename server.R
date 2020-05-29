@@ -416,6 +416,10 @@ server = function(input, output, session) {
                          format(last_date_n, format="%d%m%Y")
       )
       
+      yaxisTitle = switch(metric,
+                          Confirmed="Casos acumulados/Cumulated cases",
+                          Deaths="Mortes acumuladas/Cumulated deaths")
+      
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
         plotly::config(displayModeBar=TRUE,  # include ModeBar
@@ -537,11 +541,19 @@ server = function(input, output, session) {
       write.csv(data.out, con, row.names = FALSE)
     }
   )
+  
+  output$title_ST = renderUI({
+    if(input$metrics_ST=="Confirmed"){
+      tags$p("Previsão de casos acumulados/Prediction of cumulated cases:", style="text-align:left")
+    }else{
+      tags$p("Previsão de mortes acumuladas/Prediction of cumulated deaths:", style="text-align:left")
+    }
+  })
 
   
   #########################
   ## Plot for LT prediction
-  renderPlot_LTpred = function(varPrefix, legendPrefix, yaxisTitle) {
+  renderPlot_LTpred = function(varPrefix, legendPrefix){ #, yaxisTitle) {
     ## plotly function for interactive plot
     renderPlotly({
       ## load observed data based on input
@@ -558,9 +570,7 @@ server = function(input, output, session) {
       last_date_n = min(pred_n$date)-1
       pred_dateStr = format(pred_n$date, format="%d/%b")
       
-      # varPrefix = "New"; legendPrefix = ""
       metric = input$metrics_LT
-      # metric_leg = switch(metric, Deaths="Deaths", Confirmed="Cases")
       metric_leg = switch(metric, Deaths="deaths", Confirmed="cases") 
       ## portuguese labels for legend
       metric_pt = switch(metric, Deaths="Deaths", #Deaths="Mortes/Deaths",
@@ -568,13 +578,16 @@ server = function(input, output, session) {
       
       title = paste0(input$country_LTpred,
                      ifelse(input$state_LTpred == "<all>","",paste0(" / ",input$state_LTpred)))
-      metric_tit = ifelse(input$metrics_LT == "Confirmed", "Casos confirmados/Confirmed cases",
-                          "Mortes/Deaths")
+      metric_tit = ifelse(input$metrics_LT == "Confirmed", 
+                          "Casos confirmados/Confirmed cases","Mortes/Deaths")
       png_title = paste0("LTpred_",input$country_LTpred,
                          ifelse(input$state_LTpred == "<all>","",paste0("_",input$state_LTpred)),
                          switch(metric, Deaths="_d_", Confirmed="_n_"),
                          format(last_date_n, format="%d%m%Y")
       )
+      
+      yaxisTitle = switch(metric,Confirmed="Novos casos por dia/New cases per day",
+                          Deaths="Novas mortes por dia/New deaths per day")
       
       plt = data %>%
         plot_ly() %>%  # first, make empty plot and setup axis and legend
@@ -784,6 +797,14 @@ server = function(input, output, session) {
     }
   })
   
+  output$title_LT = renderUI({
+    if(input$metrics_LT=="Confirmed"){
+      tags$p("Previsão de novos casos/Prediction of new cases:", style="text-align:left")
+    }else{
+      tags$p("Previsão de novas mortes/Prediction of new deaths:", style="text-align:left")
+    }
+  })
+  
   ###################################################################
   
   ## OBSERVED DATA GRAPHS
@@ -794,24 +815,28 @@ server = function(input, output, session) {
       
       output$dailyMetrics = renderPlot_obs(
         varPrefix = "New", # legendPrefix="New", yaxisTitle="New Cases per Day")
-        legendPrefix="", yaxisTitle="Novos Casos por Dia/New Cases per Day")
+        legendPrefix="", yaxisTitle="Novos casos por dia/New cases per day")
       output$cumulatedMetrics = renderPlot_obs(
         varPrefix = "Cum", # legendPrefix="Cumulated", yaxisTitle="Cumulated Cases")
-        legendPrefix="", yaxisTitle="Casos Acumulados/Cumulated Cases") 
+        legendPrefix="", yaxisTitle="Casos acumulados/Cumulated cases") 
     }
   })
   
   ## SHORT TERM PREDICTION GRAPH
   output$STpred = renderPlot_STpred(
     varPrefix = "Cum", legendPrefix = "", 
-    yaxisTitle = "Casos Acumulados/Cumulated Cases",
+    # yaxisTitle = switch(input$metrics_ST,
+    #                     Confirmed="Casos acumulados/Cumulated cases",
+    #                     Deaths="Mortes acumuladas/Cumulated deaths"),
     input$pred_time
   )
   
   ## LONG TERM PREDICTION GRAPH
   output$LTpred = renderPlot_LTpred(
-    varPrefix = "New", legendPrefix = "", 
-    yaxisTitle = "Novos Casos por Dia/New Cases per Day"
+    varPrefix = "New", legendPrefix = "" #, 
+    # yaxisTitle = switch(input$metrics_LT,
+    #                     Confirmed="Novos casos por dia2/New cases per day",
+    #                     Deaths="Novas mortes por dia/New deaths per day")
   )
   
   ## SLIDER INPUT TESTE AQUIII

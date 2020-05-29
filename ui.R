@@ -14,12 +14,15 @@ shinyUI(
     tags$head(includeHTML(("google-analytics.html"))),
     useShinyjs(),
     
+    ## add favicon
+    tags$head(tags$link(rel="icon", href="favicon.ico")),
+    
     ## Título
     titlePanel(
       div(
         column(
           width = 9,
-          h2(strong("Previsão de curto e longo prazo para COVID-19")), #, style = "font-family:'Verdana';"),
+          h2(strong("Previsão de curto e longo prazos para COVID-19")), #, style = "font-family:'Verdana';"),
           h4("Short and long term prediction for COVID-19")
         ),
         column(
@@ -28,7 +31,7 @@ shinyUI(
                  tags$img(src="logoestatistica.png", title="DEST/UFMG", height="45")),
           style = "transform: translate(0%, 22%);"
         )
-      ), windowTitle = "Previsão COVID-19 - DEST/UFMG"
+      ), windowTitle = "CovidLP - DEST/UFMG"
     ),
     
     fluidRow(),
@@ -129,10 +132,11 @@ shinyUI(
             ## painel principal - output (gráficos)
             mainPanel(
               p("Em desenvolvimento/Under development", style="font-size:80%;"),
-              p("Previsão de casos acumulados/Prediction of cumulated cases:", style="text-align:left"),
+              # p("Previsão de casos acumulados/Prediction of cumulated cases:", style="text-align:left"),
+              uiOutput("title_ST"),
               withSpinner( # add spinner while loading
                 plotlyOutput("STpred")),  # gráfico previsão curto prazo
-              # downloadButton("downloadData_ST", label = "Download data", style = 'float: right; margin-bottom: 5%;')
+              ## botão download
               div(style= 'float: right; margin-bottom: 5%;',
                   downloadBttn("downloadData_ST", label = "Download data", size="xs")
               )
@@ -164,7 +168,8 @@ shinyUI(
             ## painel principal - output (gráficos)
             mainPanel(
               p("Em desenvolvimento/Under development", style="font-size:80%;"), # font-family:arial"),
-              p("Previsão de novos casos/Prediction of new cases:", style="text-align:left"),
+              # p("Previsão de novos casos/Prediction of new cases:", style="text-align:left"),
+              uiOutput("title_LT"),
               ## condition to hide/show plot depending on the flag
               shinyjs::hidden(selectInput(inputId = "show_plotLT", label = "",               
                                           choices = c(TRUE, FALSE), selected = TRUE)          
