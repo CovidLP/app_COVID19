@@ -19,21 +19,20 @@ data {
 
 
 parameters { 
+  real<lower=0> f;
+  real<lower=-30> b1;
   real<lower=0, upper=perPop*pop*exp(f*b1)> a; 
 
   //real<lower=0> b; 
-  real<lower=-30> b1;
 
   real<lower=0, upper=1> c;
-
-  real<lower=0> f;
   //real f1;
   
 }
 
 transformed parameters{
   
-  //real f;
+  //real<lower=0> f;
   real<lower=0> b;
   real<lower=0, upper=pop> mu[n];
   
