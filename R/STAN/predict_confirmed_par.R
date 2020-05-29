@@ -107,7 +107,7 @@ L = 300
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=1.1*pop)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=pop, perPop=0.1)
   
   init <- list(
     list(a = 100, b1 = log(1), c = .5, f = 1)
@@ -118,7 +118,7 @@ L = 300
                          chains = number_chains,
                          init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
-                         control = list(max_treedepth = 15, adapt_delta=0.995),
+                         control = list(max_treedepth = 50, adapt_delta=0.999),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
 
 if(class(mod_sim) != "try-error"){
