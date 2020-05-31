@@ -176,8 +176,8 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     
     
     ##flag
-    cm <- pop * 0.05 * 0.12
-    ch <- pop * 0.055 * 0.15
+    cm <- pop * 0.10 * 0.25
+    ch <- pop * 0.10 * 0.25
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana

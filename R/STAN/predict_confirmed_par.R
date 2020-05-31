@@ -178,8 +178,8 @@ if(class(mod_sim) != "try-error"){
   
   
   ##flag
-  cm <- pop * 0.05
-  ch <- pop * 0.055 
+  cm <- pop * 0.10
+  ch <- pop * 0.10 
   flag <- 0 #tudo bem
   {if(NTC500 > cm) flag <- 2 #nao plotar
     else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana

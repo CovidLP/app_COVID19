@@ -95,7 +95,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   
   params = c("a","b","c","f","mu")
   
-  burn_in= 5e3
+  burn_in= 2e3
   lag= 3
   sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
@@ -155,7 +155,6 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     L0 = 300
     
     #acha a curva de quantil 
-    #acha a curva de quantil 
     if(Y[[2]][t] > 1000){
       #acha a curva de quantil 
       lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
@@ -176,8 +175,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     NTC975=sum(highquant)+Y[[2]][t]
        
     ##flag
-    cm <- pop * 0.05
-    ch <- pop * 0.055 
+    cm <- pop * 0.10
+    ch <- pop * 0.10 
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
