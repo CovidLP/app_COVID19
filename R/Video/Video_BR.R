@@ -42,35 +42,43 @@ br_pop <- read.csv("../pop/pop_BR.csv")
 
 results.video <- list()
 
-data_final_prev <- ymd('2020-12-31')
+data_final_prev <- ymd('2021-07-01')
 data_max <- max(covid19br$date)
 
 ## Verifica se tem o RDS - Se tiver, ele só atualiza, se não, ele roda de novo
-setwd("~/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STvideo")
+setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STvideos")
 arquivos <- list.files(pattern = '*.rds', full.names = F)
 arquivo <- "Brazil_n.rds" %in% arquivos
 
-if(arquivo == TRUE){
+{if(arquivo == TRUE){
   arquivo_rds <- readRDS("Brazil_n.rds")
   data_final <- arquivo_rds[[length(arquivo_rds)]]$last_date
   data_usada <- data_final + ddays(1)
-} else data_usada <-  min(covid19br$date) + ddays(30)
+  a <- length(arquivo_rds) + 1
+  results.video <- arquivo_rds
+} 
+else{
+ data_usada <-  min(covid19br$date) + ddays(30)
+ a <- 1
+}}
 
-a <- 1
 
+setwd("/run/media/marcos/OS/UFMG/Pesquisa/Covid/R/STAN")
+#complie stan model
+model="stan_model_poisson_gen.stan"    #modelo STAN 
+mod<- try(stan_model(file = model,verbose=FALSE))
+  
+if(class(mod) == "try-error") stop("STAN DID NOT COMPILE")
+
+pop <- br_pop$pop[which(br_pop$uf == 'BR')]
+key <- FALSE
 while(data_usada <= data_max) {
   
   ## SELECIONAR OS DADOS QUE VAO SER USADOS -> VAI ACRESCENTANDO UM DIA NA DATA ATE O FINAL
   dados <- subset(covid19br,covid19br$date <= data_usada)
-  
-  #complie stan model
-  model="stan_model_poisson_gen.stan"    #modelo STAN 
-  mod<- try(stan_model(file = model,verbose=FALSE))
-  
-  if(class(mod) == "try-error") stop("STAN DID NOT COMPILE")
-  
+   
   i = 4 # (2: confirmed, 3: deaths, 4: new confirmed, 5: new deaths)
-  L = as.numeric(difftime(data_final_prev, data_usada, units = "days")) + 100
+  L = as.numeric(difftime(data_final_prev, data_usada, units = "days")) 
   ## Todas as previsões precisam ir até o mesmo dia -> dia final definido no parâmetro data_final_prev
   
   # Preparação dos dados para rodar o modelo no Stan
@@ -89,19 +97,17 @@ while(data_usada <= data_max) {
     }
   }
   
-  pop <- br_pop$pop[which(br_pop$uf == 'BR')]
-  
   t = dim(Y)[1]
   
   params = c("a","b","c","f","mu")
   
-  burn_in= 5e3
+  burn_in= 2e3
   lag= 3
   sample_size= 1e3
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=1.1*pop)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=pop, perPop=0.1)
   
   init <- list(
     list(a = 1, b1 = log(1), c = .5, f = 1)
@@ -112,7 +118,7 @@ while(data_usada <= data_max) {
                          chains = number_chains,
                          init = init,
                          iter = number_iterations, warmup = burn_in, thin = lag, 
-                         control = list(max_treedepth = 15, adapt_delta=0.995),
+                         control = list(max_treedepth = 50, adapt_delta=0.999),
                          verbose = FALSE, open_progress=FALSE, show_messages=FALSE))
   
   mod_chain = as.data.frame(mod_sim)
@@ -137,18 +143,29 @@ while(data_usada <= data_max) {
   L0 = as.numeric(difftime(data_final_prev, data_usada, units = "days")) 
   ## Todas as previsões precisam ir até o mesmo dia -> dia final definido no parâmetro data_final_prev
   
-  #acha a curva de quantil 
-  lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
-  medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
-  highquant <- colQuantiles(mod_chain_y[,1:L0], prob=.975)
+    #acha a curva de quantil 
+    if(Y[[2]][t] > 1000){
+      #acha a curva de quantil 
+      lowquant <- colQuantiles(mod_chain_y[,1:L0], prob=.025)
+      medquant <- colQuantiles(mod_chain_y[,1:L0], prob=.5)
+      highquant <- colQuantiles(mod_chain_y[,1:L0], prob=.975)
+    }
+    else{
+      lowquant <- c(Y[[2]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.025))
+      lowquant <- (lowquant-lag(lowquant,default=0))[-1]
+      medquant <- c(Y[[2]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.5))
+      medquant <- (medquant-lag(medquant,default=0))[-1]
+      highquant <- c(Y[[2]][t],colQuantiles(mod_chain_cumy[,1:L0], prob=.975))
+      highquant <- (highquant-lag(highquant,default=0))[-1]
+    }
   
   NTC25 =sum(lowquant)+Y[[2]][t]
   NTC500=sum(medquant)+Y[[2]][t]
   NTC975=sum(highquant)+Y[[2]][t]
   
   ##flag
-  cm <- pop * 0.025
-  ch <- pop * 0.03 
+  cm <- pop * 0.2
+  ch <- pop * 0.2
   flag <- 0 #tudo bem
   {if(NTC500 > cm) flag <- 2 #nao plotar
     else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
@@ -231,11 +248,14 @@ while(data_usada <= data_max) {
   results.video[[a]] <- list_out
   a = a + 1
   data_usada <-  data_usada + ddays(1)
+  key <- TRUE
 }
 
+{if(key){
 ### saveRDS
-results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STVideos/"
+results_directory = "/run/media/marcos/OS/UFMG/Pesquisa/Covid/app_COVID19/STvideos/"
 # results_directory = 'C:/Users/ricar/Dropbox/covid19/R/predict/'
 file_id <- colnames(Y)[2]
 saveRDS(results.video, file=paste0(results_directory,'Brazil_',file_id,'.rds'))
-
+}
+else print("No update necessary")}
