@@ -14,7 +14,7 @@ library(foreach)
 library(doMC)
 	
 library(rstan)                              
-
+rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
@@ -101,7 +101,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=pop, perPop=0.1)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=pop, perPop=0.08)
   
   init <- list(
     list(a = 100, b1 = log(1), c = .5, f = 1)
@@ -175,8 +175,8 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
     NTC975=sum(highquant)+Y[[2]][t]
        
     ##flag
-    cm <- pop * 0.10
-    ch <- pop * 0.10 
+    cm <- pop * 0.08
+    ch <- pop * 0.12 
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
@@ -211,7 +211,7 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
       posMax.q25 <- which.max(mu25[1:(t+L0)]) 
       aux <- mu975 - mu25[posMax.q25]
       aux2 <- aux[posMax.q25:(t+L0)]
-      val <- min(aux2[aux2>0]) 
+      val <- ifelse(length(aux2[aux2<0]) > 0, min(aux2[aux2>0]), aux[length(aux)])
       dat.max <- which(aux == val)
       
       aux <- mu975 - mu25[posMax.q25]

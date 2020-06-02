@@ -25,7 +25,7 @@ parameters {
 
   //real<lower=0> b; 
 
-  real<lower=0, upper=1> c;
+  real<lower=0> c;
   //real f1;
   
 }
@@ -55,7 +55,7 @@ model {
    // prior distributions
    a ~ gamma(0.1, 0.1);
    //b ~ gamma(0.1, 0.1);
-   c ~ beta(2,6);
+   c ~ gamma(2,9);
    f ~ gamma(0.01,0.01);   // shape, scale 
   //f1 ~ normal(0, sqrt(10));  // sqrt(1/0.1)
   b1 ~ normal(0, sqrt(20));  // sqrt(1/0.1)
