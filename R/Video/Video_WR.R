@@ -101,7 +101,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
 	  ## Todas as previsões precisam ir até o mesmo dia -> dia final definido no parâmetro data_final_prev
 	  
 	  # Preparação dos dados para rodar o modelo no Stan
-	  Y = covid_country
+	  Y = dados
 	  
 	  while(any(Y$n_new <0)){
 	    pos <- which(Y$n_new <0)
