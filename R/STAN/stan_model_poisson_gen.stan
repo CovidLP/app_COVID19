@@ -19,7 +19,7 @@ data {
 
 
 parameters { 
-  real<lower=0> f;
+  real<lower=1> f;
   real<lower=-30> b1;
   real<lower=0, upper=perPop*pop*exp(f*b1)> a; 
 

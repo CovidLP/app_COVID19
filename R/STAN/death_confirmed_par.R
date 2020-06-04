@@ -106,10 +106,10 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
   number_iterations= burn_in + lag*sample_size
   number_chains= 1
   
-  data_stan = list(y=Y[[i]], n=t, L=L, pop=.1*pop, perPop=0.25)
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=.08*pop, perPop=0.25)
   
   init <- list(
-    list(a = 100, b1 = log(1), c = .5, f = 1)
+    list(a = 100, b1 = log(1), c = .5, f = 1.01)
   )
 
   mod_sim<- try(sampling(object = mod, data = data_stan,
@@ -133,7 +133,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     yfut_pos = paste0("yfut[",1:L,"]")
 
     source("posterior_sample.R")
-    fut <- predL(L=L,t,pop*0.01,Y[[3]][t],c(mod_chain[[a_pos]]),c(mod_chain[[b_pos]]),c(mod_chain[[c_pos]]),c(mod_chain[[f_pos]]))
+    fut <- predL(L=L,t,pop*0.08*.25,Y[[3]][t],c(mod_chain[[a_pos]]),c(mod_chain[[b_pos]]),c(mod_chain[[c_pos]]),c(mod_chain[[f_pos]]))
     
     mod_chain_y = fut$y.fut
     #mod_chain_y = as.matrix(mod_chain[yfut_pos])
@@ -176,8 +176,8 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     
     
     ##flag
-    cm <- pop * 0.10 * 0.25
-    ch <- pop * 0.10 * 0.25
+    cm <- pop * 0.08 * 0.25
+    ch <- pop * 0.12 * 0.25
     flag <- 0 #tudo bem
     {if(NTC500 > cm) flag <- 2 #nao plotar
       else{if(NTC975 > ch){flag <- 1; NTC25 <- NTC975 <- NULL}}} #plotar so mediana
@@ -198,11 +198,12 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
     Dat500 <- dat.full[which.max(mu50[1:(t+L0)])]
     
     q <- .99
-    med.cum <- c(medquant[1]+Y[[3]][t],medquant[2:length(medquant)])
+    med.cum <- mu50#c(medquant[1]+Y[[2]][t],medquant[2:length(medquant)])
     med.cum <- colCumsums(as.matrix(med.cum))
     med.cum <- med.cum/med.cum[length(med.cum)]
     med.end <- which(med.cum - q > 0)[1]
-    dat.med.end <- dat.vec[med.end]
+    #dat.med.end <- dat.vec[med.end]
+    dat.med.end <- dat.full[med.end]
     
     if(flag == 0){
       #definicao do pico usando a curva das medias
@@ -212,7 +213,7 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
       posMax.q25 <- which.max(mu25[1:(t+L0)]) 
       aux <- mu975 - mu25[posMax.q25]
       aux2 <- aux[posMax.q25:(t+L0)]
-      val <- min(aux2[aux2>0]) 
+      val <- ifelse(length(aux2[aux2<0]) > 0, min(aux2[aux2>0]), aux[length(aux)])
       dat.max <- which(aux == val)
       
       aux <- mu975 - mu25[posMax.q25]
@@ -224,17 +225,19 @@ obj <- foreach(s = 1:length(countrylist) ) %dopar% {
       Dat975 <- dat.full[dat.max]
       
       #calcula o fim da pandemia
-      low.cum <- c(lowquant[1]+Y[[3]][t],lowquant[2:length(lowquant)])
+      low.cum <- mu25 #c(lowquant[1]+Y[[2]][t],lowquant[2:length(lowquant)])
       low.cum <- colCumsums(as.matrix(low.cum))
       low.cum <- low.cum/low.cum[length(low.cum)]
       low.end <- which(low.cum - q > 0)[1]
-      dat.low.end <- dat.vec[low.end]
-      
-      high.cum <- c(highquant[1]+Y[[3]][t],highquant[2:length(highquant)])
+      #dat.low.end <- dat.vec[low.end]
+      dat.low.end <- dat.full[low.end]
+    
+      high.cum <- mu975 #c(highquant[1]+Y[[2]][t],highquant[2:length(highquant)])
       high.cum <- colCumsums(as.matrix(high.cum))
       high.cum <- high.cum/high.cum[length(high.cum)]
       high.end <- which(high.cum - q > 0)[1]
-      dat.high.end <- dat.vec[high.end]
+      #dat.high.end <- dat.vec[high.end]
+      dat.high.end <- dat.full[high.end]
     }
     
     lt_predict <- data.frame( date = dat.vec,
