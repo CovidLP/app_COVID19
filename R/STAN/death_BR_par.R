@@ -19,26 +19,30 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 baseURLbr = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
 
-covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+#covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+covid19uf <- read.csv2("EstadosCov19.csv", check.names=FALSE, stringsAsFactors=FALSE) %>%
   rename(state = estado,
          date = data,
          n = casos.acumulados,
          d = obitos.acumulados,
          n_new = novos.casos,
          d_new = obitos.novos) %>%
-  mutate(date = as.Date(date)) %>%
-  select(date, n, d, -n_new, -d_new, state) %>%
+  mutate(date = as.Date(date, "%d/%m/%y")) %>%
+  select(date, -n, -d, n_new, d_new, state) %>%
+  na.omit() %>%
   arrange(state,date) %>% filter(date>='2020-01-23')
 
-covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+#covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
+covid19br <- read.csv2("BrasilCov19.csv", check.names=FALSE, stringsAsFactors=FALSE) %>%
   mutate(state = 'BR') %>%
   rename(date = data,
          n = casos.acumulados,
          d = obitos.acumulados,
          n_new = novos.casos,
          d_new = obitos.novos) %>%
-  mutate(date = as.Date(date)) %>%
-  select(date, n, d, -n_new, -d_new, state) %>%
+  mutate(date = as.Date(date, "%d/%m/%y")) %>%
+  select(date, -n, -d, n_new, d_new, state) %>%
+  na.omit() %>%
   arrange(date) %>% filter(date>='2020-01-23')
 
 covid19 <- bind_rows(covid19uf,covid19br)
@@ -68,9 +72,15 @@ obj <- foreach( s = 1:dim(uf)[1] ) %dopar% {
   #t0 = Sys.time()
   estado = uf$state[s]
     
+  #Y <- covid19 %>% filter(state==estado) %>%
+  #        mutate(n_new = n - lag(n, default=0),
+  #        d_new = d - lag(d, default=0)) %>%
+  #        select(date, n, d, n_new, d_new, state) %>%
+  #        arrange(date) %>% filter(date>='2020-02-01')
+
   Y <- covid19 %>% filter(state==estado) %>%
-          mutate(n_new = n - lag(n, default=0),
-          d_new = d - lag(d, default=0)) %>%
+          mutate(n = cumsum(n_new) ,
+          d = cumsum(d_new) ) %>%
           select(date, n, d, n_new, d_new, state) %>%
           arrange(date) %>% filter(date>='2020-02-01')
 
