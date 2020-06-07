@@ -40,7 +40,8 @@ countries <- sort(unique(allData$`Country/Region`))
 ## Setup data source (MSaude/BR)- BRAZIL
 # baseURL.BR = "https://raw.githubusercontent.com/belisards/coronabr/master/dados"
 # baseURL.BR = "https://covid.saude.gov.br/assets/files/COVID19_"
-baseURL.BR <- "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
+# baseURL.BR <- "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
+baseURL.BR <- "https://raw.githubusercontent.com/thaispaiva/app_COVID19/master/R/STAN"
 brData <- loadData.BR("EstadosCov19.csv")
 
 ##-- LOAD PREDICTION RESULTS ----

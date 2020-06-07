@@ -552,16 +552,25 @@ loadData <- function(fileName, columnName) {
 ##-- Function to load data - BRAZIL
 loadData.BR <- function(fileName) {
   if(!file.exists(fileName) || minutesSinceLastUpdate(fileName) > 10) {
-    data <- read.csv(file.path(baseURL.BR, fileName), check.names = FALSE, stringsAsFactors = FALSE) %>%
-      select(-c(1, 4, 6)) %>%
+    data <- read.csv(file.path(baseURL.BR, fileName), check.names = FALSE, stringsAsFactors = FALSE, sep=";") %>%
+      # select(-c(1, 4, 6)) %>%
+      # as_tibble() %>%
+      # mutate(date = as.Date(data)) %>% 
+      # rename(
+      #   `Province/State` = estado, 
+      #   `CumConfirmed` = casos.acumulados,
+      #   `CumDeaths` = obitos.acumulados
+      # ) %>%
+      # select(-2)
+      select(-c(1,5,7)) %>%
       as_tibble() %>%
-      mutate(date = as.Date(data)) %>% 
+      mutate(date = as.Date(data, "%d/%m/%y")) %>%
       rename(
-        `Province/State` = estado, 
-        `CumConfirmed` = casos.acumulados,
-        `CumDeaths` = obitos.acumulados
+        'Province/State' = estado,
+        'NewConfirmed' = novos.casos,
+        'NewDeaths' = obitos.novos
       ) %>%
-      select(-2)
+      select(-2) 
     
     save(data, file = paste0("cache/", fileName))  
   } else {

@@ -41,14 +41,17 @@ server = function(input, output, session) {
     } else {
       d <- d %>% 
         group_by(date) %>% 
-        summarise_at(c("CumConfirmed", "CumDeaths"), sum)
+        # summarise_at(c("CumConfirmed", "CumDeaths"), sum)
+        summarise_at(c("NewConfirmed", "NewDeaths"), sum)
     }
     
     out <- d %>% 
       mutate(
         dateStr = format(date, format = "%d/%b"),
-        NewConfirmed = CumConfirmed - lag(CumConfirmed, default = 0),
-        NewDeaths = CumDeaths - lag(CumDeaths, default = 0)
+        # NewConfirmed = CumConfirmed - lag(CumConfirmed, default = 0),
+        # NewDeaths = CumDeaths - lag(CumDeaths, default = 0)
+        CumConfirmed = cumsum(NewConfirmed),
+        CumDeaths = cumsum(NewDeaths)
       )
     
     return(out)
