@@ -253,6 +253,31 @@ server = function(input, output, session) {
     }
   )
   
+  ##-- + Data message
+  output$msg_data1 = renderUI({
+    if(input$country == "Brazil"){
+      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+    } else{
+      tags$h5("", style = "text-align:left")
+    }
+  })
+  output$msg_data2 = renderUI({
+    if(input$country == "Brazil"){
+      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+    } else{
+      tags$h5("", style = "text-align:left")
+    }
+  })
+  
+  ##-- + Data message
+  output$msg_ST = renderUI({
+    if(input$country == "Brazil"){
+      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+    } else{
+      tags$h5("", style = "text-align:left")
+    }
+  })
+  
   ##-- + Short term prediction title
   output$title_ST = renderUI({
     if(input$metrics_ST == "Confirmed"){
@@ -322,6 +347,15 @@ server = function(input, output, session) {
       tags$h3("Previsão de novos casos/Prediction of new cases:", style = "text-align:left")
     } else{
       tags$h3("Previsão de novas mortes/Prediction of new deaths:", style = "text-align:left")
+    }
+  })
+  
+  ##-- + Long term prediction message
+  output$msg_LT = renderUI({
+    if(input$country == "Brazil"){
+      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+    } else{
+      tags$h5("", style = "text-align:left")
     }
   })
   
