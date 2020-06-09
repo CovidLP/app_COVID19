@@ -178,13 +178,17 @@ server = function(input, output, session) {
   })
   
   ##-- + State
-  observeEvent(input$country, {
+  observeEvent(c(input$tabset_covid, input$country), {
     if(input$country == "Brazil") {
       states <- brData %>% pull(`Province/State`)
     } else { 
-      states <- allData %>%
-        filter(`Country/Region` == input$country) %>% 
-        pull(`Province/State`)
+      if(input$tabset_covid == "tab_dados") {
+        states <- allData %>%
+          filter(`Country/Region` == input$country) %>% 
+          pull(`Province/State`)
+      } else {
+        states <- NULL
+      }
     }
     
     states <- c("<all>", sort(unique(states)))
@@ -257,6 +261,7 @@ server = function(input, output, session) {
       tags$h3("Previsão de mortes acumuladas/Prediction of cumulated deaths:", style = "text-align:left")
     }
   })
+  
   ##-- + Short term prediction graph
   output$STpred = renderPlotly({
     yaxisTitle = switch(
@@ -280,6 +285,7 @@ server = function(input, output, session) {
     
     return(plt)  
   })
+  
   ##-- + Download
   output$downloadData_ST <- downloadHandler(
     filename = function() {
@@ -318,6 +324,7 @@ server = function(input, output, session) {
       tags$h3("Previsão de novas mortes/Prediction of new deaths:", style = "text-align:left")
     }
   })
+  
   ##-- + Long term prediction graph
   output$LTpred = renderPlotly({
     yaxisTitle = switch(
@@ -340,6 +347,7 @@ server = function(input, output, session) {
     
     return(plt) 
   })
+  
   ##-- + Downloads
   output$downloadData_LT <- downloadHandler(
     filename = function() {
