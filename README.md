@@ -17,7 +17,7 @@ Abaixo segue uma explicação deste repositório e seus diretórios:
  
 ---
 
-### CovidLP - Short and long term predictions for COVID-19 / DEST-UFMG
+# CovidLP - Short and long term predictions for COVID-19 / DEST-UFMG
 
 In this repository, you will find all the files needed to implement our app of predictions about COVID-19 cases. The online app can be accessed at [http://est.ufmg.br/covidlp](http://est.ufmg.br/covidlp). 
 
