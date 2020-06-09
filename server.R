@@ -256,14 +256,14 @@ server = function(input, output, session) {
   ##-- + Data message
   output$msg_data1 = renderUI({
     if(input$country == "Brazil"){
-      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+      tags$i("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados.",br(),"Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left; color:red")
     } else{
       tags$h5("", style = "text-align:left")
     }
   })
   output$msg_data2 = renderUI({
     if(input$country == "Brazil"){
-      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+      tags$i("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados.",br(),"Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left; color:red")
     } else{
       tags$h5("", style = "text-align:left")
     }
@@ -272,7 +272,7 @@ server = function(input, output, session) {
   ##-- + Data message
   output$msg_ST = renderUI({
     if(input$country == "Brazil"){
-      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+      tags$i("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados.",br(),"Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left; color:red")
     } else{
       tags$h5("", style = "text-align:left")
     }
@@ -353,7 +353,7 @@ server = function(input, output, session) {
   ##-- + Long term prediction message
   output$msg_LT = renderUI({
     if(input$country == "Brazil"){
-      tags$h5("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados./Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left")
+      tags$i("Os dados e previsões para o Brasil estão temporariamente suspensos devido à instabilidade nas fontes dos dados.",br(),"Data and forecasts for Brazil are temporarily suspended due to instability in data sources.", style = "text-align:left; color:red")
     } else{
       tags$h5("", style = "text-align:left")
     }
