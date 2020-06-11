@@ -42,7 +42,8 @@ server = function(input, output, session) {
       if(country_name == "Brazil") {
         d <- d %>% 
           group_by(date) %>% 
-          summarise_at(c("NewConfirmed", "NewDeaths"), sum)
+          # summarise_at(c("NewConfirmed", "NewDeaths"), sum)
+          summarise_at(c("CumConfirmed", "CumDeaths"), sum)
       } else {
         d <- d %>% 
           group_by(date) %>% 
@@ -55,10 +56,10 @@ server = function(input, output, session) {
       out <- d %>% 
         mutate(
           dateStr = format(date, format = "%d/%b"),
-          # NewConfirmed = CumConfirmed - lag(CumConfirmed, default = 0),
-          # NewDeaths = CumDeaths - lag(CumDeaths, default = 0)
-          CumConfirmed = cumsum(NewConfirmed),
-          CumDeaths = cumsum(NewDeaths)
+          NewConfirmed = CumConfirmed - lag(CumConfirmed, default = 0),
+          NewDeaths = CumDeaths - lag(CumDeaths, default = 0)
+          # CumConfirmed = cumsum(NewConfirmed),
+          # CumDeaths = cumsum(NewDeaths)
         )
     } else {
       out <- d %>% 

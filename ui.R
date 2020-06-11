@@ -131,14 +131,14 @@ shinyUI(
           
           ## Valores diários
           h3("Novos casos/New cases:", style = "text-align:left"),
-          uiOutput("msg_data1"),
+          # uiOutput("msg_data1"),
           withSpinner(
             plotlyOutput("dailyMetrics")
           ),
           
           ## Valores acumulados
           h3("Casos acumulados/Cumulated cases:", style = "text-align:left"),
-          uiOutput("msg_data2"),
+          # uiOutput("msg_data2"),
           withSpinner(
             plotlyOutput("cumulatedMetrics")
           ),
@@ -201,7 +201,7 @@ shinyUI(
           
           ## Short term prediction
           uiOutput("title_ST"),
-          uiOutput("msg_ST"),
+          # uiOutput("msg_ST"),
           h5("Em desenvolvimento/Under development"),
           withSpinner(
             plotlyOutput("STpred")
@@ -256,7 +256,7 @@ shinyUI(
           
           ## Short term prediction
           uiOutput("title_LT"),
-          uiOutput("msg_LT"),
+          # uiOutput("msg_LT"),
           h5("Em desenvolvimento/Under development"),
           withSpinner(
             plotlyOutput("LTpred")
