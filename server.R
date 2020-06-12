@@ -193,7 +193,9 @@ server = function(input, output, session) {
     }
     
     states <- c("<all>", sort(unique(states)))
-    updateSelectInput(session, "state", choices = states, selected = states[1])
+    sel <- ifelse(input$state %in% states, input$state, "<all>")
+    
+    updateSelectInput(session, "state", choices = states, selected = sel)
   })
   
   ##-- Plots ----
