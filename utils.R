@@ -73,7 +73,8 @@ plot_obs <- function(data,
         name = metric_pt,
         marker = list(
           color = switch(metric, Deaths = red, Confirmed = blu),
-          line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1)
+          line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1),
+          size = 5
         ),
         line = list(
           color = switch(metric, Deaths = dred, Confirmed = blu),
@@ -166,7 +167,8 @@ plot_STpred <- function(data, predST_n,
       name = "Observed Data",
       marker = list(
         color = switch(metric, Deaths = red, Confirmed = blu),
-        line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1)),
+        line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1),
+        size = 5),
       line = list(
         color = switch(metric, Deaths = dred, Confirmed = blu),
         width = 1.5)
@@ -193,7 +195,8 @@ plot_STpred <- function(data, predST_n,
       mode = 'lines', hoverinfo = "x+y", 
       fill = 'tonexty',
       name = "95% CI",
-      fillcolor = 'rgba(150, 150, 150, 0.5)',
+      # fillcolor = 'rgba(150, 150, 150, 0.5)',
+      fillcolor = 'rgba(100, 100, 100, 0.5)',
       line = list(color = 'rgba(0, 0, 0, 1)', width = 0)
     ) %>%
     ## Add median of prediction
@@ -204,7 +207,10 @@ plot_STpred <- function(data, predST_n,
             predST_n$med[1:pred_time]),
       type = 'scatter', mode = 'lines+markers', hoverinfo = "x+y", 
       name = "Prediction",
-      marker = list(color = 'rgb(0, 0, 0)', size = 4), line = list(color = 'rgb(0, 0, 0)', dash = 'dot')
+      # marker = list(color = 'rgb(0, 0, 0)', size = 4),
+      marker = list(color = 'rgb(0, 0, 0)', size = 2),
+      # line = list(color = 'rgb(0, 0, 0)', dash = 'dot')
+      line = list(color = 'rgb(0, 0, 0)', dash = 'dot', width=0.5)
     )
   plt
 }
@@ -313,7 +319,8 @@ plot_LTpred <- function(data, predLT_n,
         x = mu_plot$date, y = mu_plot$mu,
         type = 'scatter', mode = 'lines', hoverinfo = "none",
         name = ("Estimated Mean"),
-        line = list(color = 'rgb(230, 115, 0)', dash = 'solid', width = 2.5)
+        line = list(color = 'rgb(230, 115, 0)', dash = 'solid',
+                    width=1.5) ## width = 2.5)
       ) %>%
       ## Add lines for observed data
       add_trace(
@@ -323,7 +330,8 @@ plot_LTpred <- function(data, predLT_n,
         name = "Observed Data",
         marker = list(
           color = switch(metric, Deaths = red, Confirmed = blu),
-          line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1)),
+          line = list(color = switch(metric, Deaths = dred, Confirmed = dblu), width = 1),
+          size = 5),
         line = list(
           color = switch(metric, Deaths = dred, Confirmed = blu),
           width = 1.5)
@@ -348,7 +356,8 @@ plot_LTpred <- function(data, predLT_n,
           mode = 'lines', hoverinfo = "x+y",
           fill = 'tonexty',
           name = "95% CI",
-          fillcolor = 'rgba(150, 150, 150, 0.5)',
+          # fillcolor = 'rgba(150, 150, 150, 0.5)',
+          fillcolor = 'rgba(100, 100, 100, 0.5)',
           line = list(color = 'rgba(0, 0, 0, 1)', width = 0)
         )
     }
@@ -359,7 +368,10 @@ plot_LTpred <- function(data, predLT_n,
         y = c(data[[paste0(varPrefix, metric)]][which(data$date == last_date_n)], pred_n$med),
         type = 'scatter', mode = 'lines+markers', hoverinfo = "x+y",
         name = "Prediction",
-        marker = list(color = 'rgb(0,0,0)', size = 4), line = list(color = 'rgb(0, 0, 0)', dash = 'dot')
+        # marker = list(color = 'rgb(0,0,0)', size = 4),
+        marker = list(color = 'rgb(0,0,0)', size = 2),
+        # line = list(color = 'rgb(0, 0, 0)', dash = 'dot')
+        line = list(color = 'rgb(0, 0, 0)', dash = 'dot', width=0.5)
       ) 
     
     return(plt)
