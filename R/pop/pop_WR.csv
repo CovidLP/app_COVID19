@@ -20,7 +20,7 @@ Burkina Faso,BFA,19751535
 Bangladesh,BGD,161356039
 Bulgaria,BGR,7025037
 Bahrain,BHR,1569439
-Bahamas; The,BHS,385640
+Bahamas,BHS,385640
 Bosnia and Herzegovina,BIH,3323929
 Belarus,BLR,9483499
 Belize,BLZ,383071
@@ -28,7 +28,7 @@ Bermuda,BMU,63973
 Bolivia,BOL,11353142
 Brazil,BRA,209469333
 Barbados,BRB,286641
-Brunei Darussalam,BRN,428962
+Brunei,BRN,428962
 Bhutan,BTN,754394
 Botswana,BWA,2254126
 Central African Republic,CAF,4666377
@@ -40,8 +40,8 @@ Chile,CHL,18729160
 China,CHN,1392730000
 Cote d'Ivoire,CIV,25069229
 Cameroon,CMR,25216237
-Congo; Dem. Rep.,COD,84068091
-Congo; Rep.,COG,5244363
+Congo (Kinshasa),COD,84068091
+Congo (Brazzaville),COG,5244363
 Colombia,COL,49648685
 Comoros,COM,832322
 Cabo Verde,CPV,543767
@@ -51,7 +51,7 @@ Cuba,CUB,11338138
 Curacao,CUW,159800
 Cayman Islands,CYM,64174
 Cyprus,CYP,1189265
-Czech Republic,CZE,10629928
+Czechia,CZE,10629928
 Germany,DEU,82905782
 Djibouti,DJI,958920
 Dominica,DMA,71625
@@ -64,7 +64,7 @@ East Asia & Pacific,EAS,2328220870
 Europe & Central Asia (excluding high income),ECA,417797257
 Europe & Central Asia,ECS,918793590
 Ecuador,ECU,17084357
-Egypt; Arab Rep.,EGY,98423595
+Egypt,EGY,98423595
 Euro area,EMU,341783171
 Eritrea,ERI,
 Spain,ESP,46796540
@@ -83,7 +83,7 @@ Georgia,GEO,3726549
 Ghana,GHA,29767108
 Gibraltar,GIB,33718
 Guinea,GIN,12414318
-Gambia; The,GMB,2280102
+Gambia,GMB,2280102
 Guinea-Bissau,GNB,1874309
 Equatorial Guinea,GNQ,1308974
 Greece,GRC,10731726
@@ -119,18 +119,18 @@ Jordan,JOR,9956011
 Japan,JPN,126529100
 Kazakhstan,KAZ,18272430
 Kenya,KEN,51393010
-Kyrgyz Republic,KGZ,6322800
+Kyrgyzstan,KGZ,6322800
 Cambodia,KHM,16249798
 Kiribati,KIR,115847
-St. Kitts and Nevis,KNA,52441
+Saint Kitts and Nevis,KNA,52441
 "Korea, South",KOR,51606633
 Kuwait,KWT,4137309
 Latin America & Caribbean (excluding high income),LAC,609013934
-Lao PDR,LAO,7061507
+Laos,LAO,7061507
 Lebanon,LBN,6848925
 Liberia,LBR,4818977
 Libya,LBY,6678567
-St. Lucia,LCA,181889
+Saint Lucia,LCA,181889
 Latin America & Caribbean,LCN,641357515
 Least developed countries: UN classification,LDC,1009662578
 Low income,LIC,705417321
@@ -157,7 +157,7 @@ Middle income,MIC,5678540888
 North Macedonia,MKD,2082958
 Mali,MLI,19077690
 Malta,MLT,484630
-Myanmar,MMR,53708395
+Burma,MMR,53708395
 Middle East & North Africa (excluding high income),MNA,382896715
 Montenegro,MNE,622227
 Mongolia,MNG,3170208
@@ -218,13 +218,13 @@ Sub-Saharan Africa,SSF,1078306520
 Small states,SST,40575321
 Sao Tome and Principe,STP,211028
 Suriname,SUR,575991
-Slovak Republic,SVK,5446771
+Slovakia,SVK,5446771
 Slovenia,SVN,2073894
 Sweden,SWE,10175214
 Eswatini,SWZ,1136191
 Sint Maarten (Dutch part),SXM,40654
 Seychelles,SYC,96762
-Syrian Arab Republic,SYR,16906283
+Syria,SYR,16906283
 Turks and Caicos Islands,TCA,37665
 Chad,TCD,15477751
 East Asia & Pacific (IDA & IBRD countries),TEA,2056064424
@@ -250,7 +250,7 @@ Upper middle income,UMC,2655635719
 Uruguay,URY,3449299
 US,USA,326687501
 Uzbekistan,UZB,32955400
-St. Vincent and the Grenadines,VCT,110210
+Saint Vincent and the Grenadines,VCT,110210
 Venezuela,VEN,28870195
 British Virgin Islands,VGB,29802
 Virgin Islands (U.S.),VIR,106977
@@ -259,7 +259,7 @@ Vanuatu,VUT,292680
 World,WLD,7594270356
 Samoa,WSM,196130
 Kosovo,XKX,1845300
-Yemen; Rep.,YEM,28498687
+Yemen,YEM,28498687
 South Africa,ZAF,57779622
 Zambia,ZMB,17351822
 Zimbabwe,ZWE,14439018
