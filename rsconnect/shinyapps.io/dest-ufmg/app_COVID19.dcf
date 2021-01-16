@@ -1,0 +1,13 @@
+name: app_COVID19
+title: app_COVID19
+username:
+account: dest-ufmg
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2008872
+bundleId: 3289548
+url: https://dest-ufmg.shinyapps.io/app_COVID19/
+when: 1592520228.8867
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Brazil_n.rds|plot_LTpred.R|README.md|teste_plots_weekend.R|teste_subplot.R|cache/EstadosCov19.csv|app_v1|R|STpredictions|STvideos
