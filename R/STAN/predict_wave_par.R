@@ -30,15 +30,19 @@ covid19_deaths <- loadData("time_series_covid19_deaths_global.csv", "deaths")
 covid19 <- covid19_confirm %>%  left_join(covid19_deaths)
 
 #countrylist = "Korea, South"
-countrylist <- c("Spain", "United Kingdom", "US", "Australia", "Germany", "Italy", "Japan", "Romania", "Saudi Arabia", "Canada","Belgium","Portugal", "Poland")
+countrylist = c("Argentina", "Australia", "Belgium", "Bolivia", "Canada",
+  "Chile", "Costa Rica", "Ecuador", "Ethiopia", "Guatemala",
+  "Honduras", "India", "Mexico", "New Zealand", "Russia",
+  "Saudi Arabia", "South Africa", "Venezuela") # 18
 
+  
 #countrylist <- c("Argentina","Bolivia","Canada","Chile","Colombia","Ecuador", "Greece", "India", "Japan", "Korea, South", "Mexico", "Peru", "Paraguay", "Poland", "Russia", "South Africa", "United Kingdom", "Uruguay", "Sweden", "US", "Venezuela")                    
 
 country_pop <- read.csv("../pop/pop_WR.csv")
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-registerDoMC(cores = 13)    # Alternativa Linux
+registerDoMC(cores = 18)    # Alternativa Linux
 
 #complie stan model
 model="stan_model_poisson_waves.stan"    #modelo STAN 

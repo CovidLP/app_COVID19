@@ -12,44 +12,18 @@ library(mcmcplots)
 library(MCMCvis)
 library(foreach)
 library(doMC)
-library(rstan)                              
+library(rstan)   
+library(covid19br)
+
+Sys.setenv(LANGUAGE='en')
 rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-baseURLbr = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
+covid19 <- downloadCovid19(level = "states") %>%
+  select(date,n=accumCases,d=accumDeaths,n_new=newCases, d_new=newDeaths,state) %>%
+  arrange(state,date) 
 
-covid19uf <- read.csv(file.path(baseURLbr,"EstadosCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
-#covid19uf <- read.csv2("EstadosCov19.csv", check.names=FALSE, stringsAsFactors=FALSE) %>%
-  rename(state = estado,
-         date = data,
-         n = casos.acumulados,
-         d = obitos.acumulados,
-         n_new = novos.casos,
-         d_new = obitos.novos) %>%
-  mutate(date = as.Date(date)) %>%
-#  mutate(date = as.Date(date, "%d/%m/%y")) %>%
-  select(date, n, d, -n_new, -d_new, state) %>%
-#  select(date, -n, -d, n_new, d_new, state) %>%
-#  na.omit() %>%
-  arrange(state,date) %>% filter(date>='2020-01-23')
-
-covid19br <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
-#covid19br <- read.csv2("BrasilCov19.csv", check.names=FALSE, stringsAsFactors=FALSE) %>%
-  mutate(state = 'BR') %>%
-  rename(date = data,
-         n = casos.acumulados,
-         d = obitos.acumulados,
-         n_new = novos.casos,
-         d_new = obitos.novos) %>%
-  mutate(date = as.Date(date)) %>%
-#  mutate(date = as.Date(date, "%d/%m/%y")) %>%
-  select(date, n, d, -n_new, -d_new, state) %>%
-#  select(date, -n, -d, n_new, d_new, state) %>%
-#  na.omit() %>%
-  arrange(date) %>% filter(date>='2020-01-23')
-
-covid19 <- bind_rows(covid19uf,covid19br)
 uf <- distinct(covid19,state)
 
 br_pop <- read.csv("../pop/pop_BR.csv")
@@ -59,7 +33,7 @@ br_pop <- read.csv("../pop/pop_BR.csv")
 ###########################################################################
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-registerDoMC(cores = 27)    # Alternativa Linux
+registerDoMC(cores = 3)    # Alternativa Linux
 
 #complie stan model
 model="stan_model_poisson_gen_fds.stan"    #modelo STAN 
@@ -67,8 +41,12 @@ mod<- try(stan_model(file = model,verbose=FALSE))
 
 if(class(mod) == "try-error") stop("STAN DID NOT COMPILE")
 
+state_list <- c("CE", "MA", "RR")
+
+state_vec <- which(uf$state %in% state_list)
+
 #for ( s in 1:dim(uf)[1] ) {
-obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
+obj <- foreach( s = state_vec ) %dopar% {
 #obj <- foreach( s = 1:3 ) %dopar% {
   #source("jags_poisson.R")
   
@@ -77,11 +55,17 @@ obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
   #t0 = Sys.time()
   estado = uf$state[s]
     
-  Y <- covid19 %>% filter(state==estado) %>%
-          mutate(n_new = n - lag(n, default=0),
-          d_new = d - lag(d, default=0)) %>%
-          select(date, n, d, n_new, d_new, state) %>%
-          arrange(date) %>% filter(date>='2020-02-01')
+  Y <- covid19 %>% filter(state==estado)
+  
+  {if(sum(duplicated(Y$date)) > 0){
+    Y <- Y[-which(duplicated(Y$date)),]
+  }}
+  
+  #Y <- covid19 %>% filter(state==estado) %>%
+  #        mutate(n_new = n - lag(n, default=0),
+  #        d_new = d - lag(d, default=0)) %>%
+  #        select(date, n, d, n_new, d_new, state) %>%
+  #        arrange(date) %>% filter(date>='2020-02-01')
 
   #Y <- covid19 %>% filter(state==estado) %>%
   #        mutate(n = cumsum(n_new) ,
@@ -117,15 +101,60 @@ obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
   
   #changed
   ### Index the sundays in the vector of observations
-  data_stan$index_sundays<- which(weekdays(Y$date) == "domingo")
+  i = 5 # (2: confirmed, 3: deaths, 4: new confirmed, 5: new deaths)
+  L = 1000
+  #t0 = Sys.time()
+  estado = uf$state[s]
+  
+  Y <- covid19 %>% filter(state==estado) %>%
+    mutate(n_new = n - lag(n, default=0),
+           d_new = d - lag(d, default=0)) %>%
+    select(date, n, d, n_new, d_new, state) %>%
+    arrange(date) %>% filter(date>='2020-02-01')
+  
+  #Y <- covid19 %>% filter(state==estado) %>%
+  #        mutate(n = cumsum(n_new) ,
+  #        d = cumsum(d_new) ) %>%
+  #        select(date, n, d, n_new, d_new, state) %>%
+  #        arrange(date) %>% filter(date>='2020-02-01')
+  
+  #Y = covid19 %>% filter(state==uf$state[s])
+  
+  while(any(Y$d_new <0)){
+    pos <- which(Y$d_new <0)
+    for(j in pos){
+      Y$d_new[j-1] = Y$d_new[j] + Y$d_new[j-1]
+      Y$d_new[j] = 0
+      Y$d[j-1] = Y$d[j]
+    }
+  }
+  
+  pop <- br_pop$pop[which(br_pop$uf == uf$state[s])]
+  
+  t = dim(Y)[1]
+  
+  params = c("a","b","c","f","beta_sunday", "beta_monday", "mu")
+  # params = c("a","b","c","f", "mu")
+  
+  burn_in= 8e3
+  lag= 3
+  sample_size= 1e3
+  number_iterations= burn_in + lag*sample_size
+  number_chains= 1
+  
+  data_stan = list(y=Y[[i]], n=t, L=L, pop=.08*pop, perPop=0.25)  
+  
+  #changed
+  ### Index the sundays in the vector of observations
+  data_stan$index_sundays<- which(weekdays(Y$date) == "Sunday")
   data_stan$n_sundays<- length(data_stan$index_sundays)
   
   ### Index the montdays in the vector of observations
-  data_stan$index_mondays<- which(weekdays(Y$date) == "segunda")
+  data_stan$index_mondays<- which(weekdays(Y$date) == "Monday")
   data_stan$n_mondays<- length(data_stan$index_mondays)
   
   ### Index the other days in the vector of observations
-  data_stan$index_others<- which(!(weekdays(Y$date) %in% c("domingo", "segunda")))
+  data_stan$index_others<- which(!(weekdays(Y$date) %in% c("Sunday", "Monday")))
   data_stan$n_others<- length(data_stan$index_others)
   
   init <- list(
@@ -156,11 +185,11 @@ obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
 
     ### For prediction #changed
     aux_date<- seq(from = last(Y$date), by = "days", length.out = L + 1)[-1]
-    index_sundays_prediction<- which(weekdays(aux_date) == "domingo")
+    index_sundays_prediction<- which(weekdays(aux_date) == "Sunday")
     #n_sundays_prediction<- length(index_sundays_prediction)
-    index_mondays_prediction<- which(weekdays(aux_date) == "segunda")
+    index_mondays_prediction<- which(weekdays(aux_date) == "Monday")
     #n_mondays_prediction<- length(index_mondays_prediction)
-    index_others_prediction<- which(!(weekdays(aux_date) %in% c("domingo", "segunda")))
+    index_others_prediction<- which(!(weekdays(aux_date) %in% c("Sunday", "Monday")))
     #n_others_prediction<- length(index_others_prediction)
     
     source("posterior_sample.R")
@@ -218,7 +247,7 @@ obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
     dat.vec <- as.Date((max(Y$date)+1):(max(Y$date)+L0), origin="1970-01-01")
     dat.full <- c(Y[[1]],dat.vec)
 
-    index_week <- which(!(weekdays(dat.full) %in% c("domingo", "segunda"))) #change
+    index_week <- which(!(weekdays(dat.full) %in% c("Sunday", "Monday"))) #change
     
     Dat25 <- Dat500 <- Dat975 <- NULL
     dat.low.end <- dat.med.end <- dat.high.end <- NULL
@@ -295,7 +324,8 @@ obj <- foreach( s = 1:(dim(uf)[1]-1) ) %dopar% {
                        end.dat.upper = dat.high.end)
     
     muplot <- data.frame(date = dat.full[1:(t+L0)], mu = mu50[1:(t+L0)])
-    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, mu_plot = muplot, flag=flag, mod_chain_y = mod_chain_y, mod_chain_mu = mod_chain_mu)
+    list_out <- list( df_predict = df_predict, lt_predict=lt_predict, lt_summary=lt_summary, 
+                      mu_plot = muplot, flag=flag, mod_chain_y = mod_chain_y, mod_chain_mu = mod_chain_mu)
     
     ### saveRDS
     results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"

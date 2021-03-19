@@ -9,29 +9,32 @@ library(dplyr)
 library(tidyr)
 library(matrixStats)
 library(data.table)
+library(covid19br)
 
 uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA",
         "PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
 
 dir_rds <- "/home/marcosop/Covid/app_COVID19/STpredictions" # <- DIRETORIO DO GITHUB
 
-baseURLbr = "https://raw.githubusercontent.com/covid19br/covid19br.github.io/master/dados"
-covid19 <- read.csv(file.path(baseURLbr,"BrasilCov19.csv"), check.names=FALSE, stringsAsFactors=FALSE) %>%
-  mutate(state = 'BR') %>%
-  rename(date = data,
-         n = casos.acumulados,
-         d = obitos.acumulados,
-         n_new = novos.casos,
-         d_new = obitos.novos) %>%
-  mutate(date = as.Date(date)) %>%
-  select(date, n, d, -n_new, -d_new, state) %>%
-  arrange(date) %>% filter(date>='2020-01-23')
+#covid19 <- downloadCovid19(level = "brazil") %>%
+#  select(date,n=accumCases,d=accumDeaths) %>%
+#  mutate(state = 'BR') %>%
+#  arrange(date) 
 
-  Y <- covid19 %>% filter(state=="BR") %>%
-          mutate(n_new = n - lag(n, default=0),
-          d_new = d - lag(d, default=0)) %>%
-          select(date, n, d, n_new, d_new, state) %>%
-          arrange(date) %>% filter(date>='2020-02-01')
+#Y <- covid19 %>% filter(state=="BR") %>%
+#  mutate(n_new = n - lag(n, default=0),
+#         d_new = d - lag(d, default=0)) %>%
+#  select(date, n, d, n_new, d_new, state) %>%
+#  arrange(date) %>% filter(date>='2020-02-01')
+
+Y <- downloadCovid19(level = "brazil") %>%
+  select(date,n=accumCases,d=accumDeaths,n_new=newCases,d_new=newDeaths) %>%
+  mutate(state = 'BR') %>%
+  arrange(date) 
+
+{if(sum(duplicated(Y$date)) > 0){
+  Y <- Y[-which(duplicated(Y$date)),]
+}}
 
   while(any(Y$n_new <0)){
     pos <- which(Y$n_new <0)
@@ -49,15 +52,25 @@ pop <- br_pop$pop[which(br_pop$uf == "BR")]
 
 # u = uf[1]
 L <- 1000
+
 for (u in uf) {
-  
+    
   # rds import
   data_uf <- readRDS(paste0(dir_rds,"/Brazil_",u,"_de.rds"))
 
   # create yfut_UF
   #dates <- as.Date((Y$date[length(Y$date)]+1):max(data_uf$lt_predict$date), origin="1970-01-01")
   dates <- as.Date((Y$date[length(Y$date)]+1):(Y$date[length(Y$date)]+L), origin="1970-01-01")
+  pred.ini <- dates[1]
   yfut_UF0 <- data.frame(date = dates, UF = u)
+  
+  # mod_chain_y dates adjust
+  {if (data_uf$lt_predict$date[1] < pred.ini) {
+    nfill = abs(as.numeric(data_uf$lt_predict$date[1]-pred.ini))
+    data_uf$mod_chain_y <- cbind(data_uf$mod_chain_y[,-(1:nfill)],
+                                 matrix(0, nrow=dim(data_uf$mod_chain_y)[1], ncol=nfill))
+  }}
+  
   {if (u == uf[1]) {
     yfut_UF <- yfut_UF0 %>% bind_cols(as_tibble(t(data_uf$mod_chain_y)))
   } else {
@@ -68,6 +81,14 @@ for (u in uf) {
   #dates <- data_uf$mu_plot$date
   dates <- as.Date((Y$date[1]):(Y$date[length(Y$date)]+L), origin="1970-01-01")#data_uf$mu_plot$date  
   mu_UF0 <- data.frame(date = dates, UF = u)
+  
+  # mod_chain_mu dates adjust
+  {if (data_uf$lt_predict$date[1] < pred.ini) {
+    nfill = abs(as.numeric(data_uf$lt_predict$date[1]-pred.ini))
+    data_uf$mod_chain_mu <- cbind(data_uf$mod_chain_mu,
+                                  matrix(0, nrow=dim(data_uf$mod_chain_mu)[1], ncol=nfill))
+  }}
+  
   {if (u == uf[1]) {
     mu_UF <- mu_UF0 %>% bind_cols(as_tibble(t(data_uf$mod_chain_mu)))
   } else {
