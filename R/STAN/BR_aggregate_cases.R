@@ -7,16 +7,24 @@ setwd("/home/marcosop/Covid/R/STAN")
 ###################################################################
 library(PandemicLP)
 
-states <- state_list()
-uf <- states$state_abb
+#states <- state_list()
+#uf <- states$state_abb
 
 #Github directory where the data is stored
 dir_rds <-  "/home/marcosop/TMP/STaux"
 
 #read the posterior file
-state_nm <- paste0(dir_rds,'/',uf[1],"_posterior_predict_ne.rds")
+files <- list.files(dir_rds)
+pos <- grep("_ne",files)
+files <- files[pos]
+uf <- substr(files,1,2)
+state_nm <- paste0(dir_rds,"/",files[1])
 data_base <- readRDS(state_nm)
 uf_2 <- uf[-1]
+
+#state_nm <- paste0(dir_rds,'/',uf[1],"_posterior_predict_ne.rds")
+#data_base <- readRDS(state_nm)
+#uf_2 <- uf[-1]
 
 #get the mean sample and set it to be dates x mcmc sample
 mu_t <- t(data_base$pastMu)

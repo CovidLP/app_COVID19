@@ -11,9 +11,17 @@ uf <- states$state_abb
 dir_rds <-  "/home/marcosop/TMP/STaux"
 
 #read the posterior file
-state_nm <- paste0(dir_rds,'/',uf[1],"_posterior_predict_de.rds")
+files <- list.files(dir_rds)
+pos <- grep("_de",files)
+files <- files[pos]
+uf <- substr(files,1,2)
+state_nm <- paste0(dir_rds,"/",files[1])
 data_base <- readRDS(state_nm)
 uf_2 <- uf[-1]
+
+#state_nm <- paste0(dir_rds,'/',uf[1],"_posterior_predict_ne.rds")
+#data_base <- readRDS(state_nm)
+#uf_2 <- uf[-1]
 
 #remove posterior_predict file from directory (to save server space)
 file.remove(state_nm)
