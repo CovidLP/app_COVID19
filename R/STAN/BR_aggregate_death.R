@@ -3,9 +3,8 @@
 ###################################################################
 library(PandemicLP)
 
-
-states <- state_list()
-uf <- states$state_abb
+#states <- state_list()
+#uf <- states$state_abb
 
 #Github directory where the data is stored
 dir_rds <-  "/home/marcosop/TMP/STaux"
@@ -22,9 +21,6 @@ uf_2 <- uf[-1]
 #state_nm <- paste0(dir_rds,'/',uf[1],"_posterior_predict_ne.rds")
 #data_base <- readRDS(state_nm)
 #uf_2 <- uf[-1]
-
-#remove posterior_predict file from directory (to save server space)
-file.remove(state_nm)
 
 #get the mean sample and set it to be dates x mcmc sample
 mu_t <- t(data_base$pastMu)

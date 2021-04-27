@@ -38,6 +38,12 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   estado <- state_list[s]
   data <- covid19 %>% filter(state== estado) %>% 
           select(date=date, cases=n, deaths=d, new_cases=n_new, new_deaths=d_new,-state)
+          
+  #remove duplicated data
+  {if(sum(duplicated(data$date)) > 0){
+    data <- data[-which(duplicated(data$date)),]
+  }}
+
   pop <- br_pop$pop[which(br_pop$uf == estado)]
   names <- paste("Brazil",estado,sep="_")
   
