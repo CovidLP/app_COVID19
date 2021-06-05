@@ -25,21 +25,19 @@ uf <- distinct(covid19,state)
 br_pop <- read.csv("../pop/pop_BR.csv")
 
 
-state_list <- c("AM", "AP", "ES", "MG", "MS",
-	        "MT", "PB", "PE", "PR", "RJ",
-	        "RN", "RS", "SC", "SP", "TO") # 15
+state_list <- c("AP", "MG", "MS", "PR", "SC") # 5
 
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-registerDoMC(cores = 15)    # Alternativa Linux
+registerDoMC(cores = 5)    # Alternativa Linux
 
 obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   estado <- state_list[s]
   data <- covid19 %>% filter(state== estado) %>% 
           select(date=date, cases=n, deaths=d, new_cases=n_new, new_deaths=d_new,-state)
-  
+          
   #remove duplicated data
   {if(sum(duplicated(data$date)) > 0){
     data <- data[-which(duplicated(data$date)),]
@@ -50,16 +48,16 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   covid_state <- list(data=as.data.frame(data), name = names, population = pop)
 
-  nwaves = 3
+  nwaves = 4
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=c(1,150,300), d_1=rep(1,nwaves), 
+         alpha=rep(0.01,nwaves), delta=c(1,150,250,350), d_1=rep(1,nwaves), 
          d_2=rep(1,nwaves),d_3=rep(1,nwaves))
   )
   
-  mod <- pandemic_model(covid_state,case_type = "deaths", p = 0.08*0.25,
+  mod <- pandemic_model(covid_state,case_type = "confirmed", p = 0.08,
                         seasonal_effect=c("sunday","monday"),n_waves = nwaves, 
-                        warmup = 5e3, thin = 3, sample_size = 1e3,
+                        warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=init, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
@@ -74,17 +72,17 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
-                    mu_plot = stats$mu_plot, flag=0)
+                    mu_plot = stats$mu_plot, flag = 0)
   
   ### saveRDS
   results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"
   names(covid_state$data) <- c("date","n","d","n_new","d_new")
-  file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[3],'e')
+  file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[2],'e')
   saveRDS(list_out, file=paste0(results_directory,'Brazil_',file_id,'.rds'))
   
   
   ### saveRDS - THE POSTERIOR PREDICT (posterior_predict object)
   results_directory = "/home/marcosop/TMP/STaux/"
-  file_id <- paste0(state_list[s],'_posterior_predict_',colnames(covid_state$data)[3],'e')
+  file_id <- paste0(state_list[s],'_posterior_predict_',colnames(covid_state$data)[2],'e')
   saveRDS(pred,file = paste0(results_directory,file_id,'.rds'))
 }

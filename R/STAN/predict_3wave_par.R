@@ -14,12 +14,10 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Argentina", "Belgium", "Bolivia", "Canada", "Chile",
-                 "China", "Costa Rica", "Ecuador", "Ethiopia", "France",
-                 "Germany", "Indonesia", "Ireland", "Italy", "Mexico",
-                 "Morocco", "Panama", "Paraguay", "Peru", "Portugal",
-                 "Russia", "Sweden", "Switzerland", "Turkey", "Ukraine",
-                 "United Kingdom", "Uruguay") # 27
+countrylist <- c("Bolivia", "Costa Rica", "Ecuador", "France", "Honduras",
+		  "Iraq", "Mexico", "Morocco", "Peru", "Russia",
+		  "Saudi Arabia", "South Africa", "Sweden", "Switzerland", "Turkey") # 15
+
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -34,13 +32,12 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   nwaves = 3
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=c(1,150,300
-                                         ))
+         alpha=rep(0.01,nwaves), delta=c(1,150,300))
   )
   
   mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,
                         n_waves = nwaves, 
-                        warmup = 5e3, thin = 3, sample_size = 1e3,
+                        warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=init, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions

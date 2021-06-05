@@ -25,13 +25,14 @@ uf <- distinct(covid19,state)
 br_pop <- read.csv("../pop/pop_BR.csv")
 
 
-state_list <- c("AC", "AP", "DF", "ES", "MS",
-                "PR", "RJ", "RO", "RS", "SC",
-                "SE", "SP", "TO") # 13
+state_list <- c("AM", "BA", "DF", "ES", "MT",
+		"PA", "PE", "RJ", "RN", "RO",
+		"RR", "RS", "SE", "SP", "TO") # 15
+
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-registerDoMC(cores = 13)    # Alternativa Linux
+registerDoMC(cores = 15)    # Alternativa Linux
 
 obj <- foreach(s = 1:length(state_list)) %dopar% {
   
@@ -58,7 +59,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   mod <- pandemic_model(covid_state,case_type = "confirmed", p = 0.08,
                         seasonal_effect=c("sunday","monday"),n_waves = nwaves, 
-                        warmup = 5e3, thin = 3, sample_size = 1e3,
+                        warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=init, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions

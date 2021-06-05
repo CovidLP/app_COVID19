@@ -14,7 +14,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Korea, South", "Netherlands") # 2
+countrylist <- c("Indonesia", "Korea, South", "Netherlands", "Norway", "Portugal") # 5
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -34,7 +34,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   
   mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,
                         n_waves = nwaves, 
-                        warmup = 5e3, thin = 3, sample_size = 1e3,
+                        warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=init, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
