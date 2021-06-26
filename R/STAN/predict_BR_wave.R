@@ -25,12 +25,12 @@ uf <- distinct(covid19,state)
 br_pop <- read.csv("../pop/pop_BR.csv")
 
 
-state_list <- c("AC", "AL", "CE", "GO", "MA",
-		"PB", "PI") # 7
+state_list <- c("AL", "CE", "PI") # 3
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-registerDoMC(cores = 7)    # Alternativa Linux
+#registerDoMC(cores = 7)    # Alternativa Linux
+registerDoMC(cores = min(63,length(state_list)))    # Alternativa Linux
 
 obj <- foreach(s = 1:length(state_list)) %dopar% {
   
@@ -51,7 +51,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   nwaves = 2
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=c(1,200), d_1=rep(1,nwaves), 
+         alpha=rep(0.01,nwaves), delta=c(1,250), d_1=rep(1,nwaves), 
          d_2=rep(1,nwaves),d_3=rep(1,nwaves))
   )
   

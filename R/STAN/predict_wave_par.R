@@ -14,7 +14,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Guatemala", "India", "New Zealand", "Venezuela") # 4
+countrylist <- c("Guatemala", "New Zealand") # 2
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -29,7 +29,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   nwaves = 2
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=c(1,200))
+         alpha=rep(0.01,nwaves), delta=c(1,250))
   )
   
   mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,

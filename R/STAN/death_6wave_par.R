@@ -1,4 +1,3 @@
-############  SCRIPT PARCIAL   PAÍSES:  CASOS NOVOS CONFIRMADOS
 rm(list=ls())
 setwd("/home/marcosop/Covid/R/STAN")
 
@@ -9,29 +8,34 @@ library(PandemicLP)
 library(foreach)
 library(doMC)
 
+Sys.setenv(LANGUAGE='en')
+rstan_options(auto_write = TRUE)
+
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-
-countrylist <- c("China", "New Zealand") # 2
+countrylist <- c("Indonesia") # 1
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
 registerDoMC(cores = min(63,length(countrylist)))    # Alternativa Linux
+
 
 obj <- foreach(s = 1:length(countrylist)) %dopar% {
   
   country_name <- countrylist[s]
   covid_country <- load_covid(country_name=country_name) # load data 
   
+  nwaves = 6
   init <- list(
-    list(a = 100, b = 1, c = .5, f = 1.01) 
+    list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
+         alpha=rep(0.01,nwaves), delta=c(1,100,200,300,400,500))
   )
   
-  mod <- pandemic_model(covid_country,case_type = "deaths", p = 0.08*0.25,
-                        n_waves = 1, 
+  mod <- pandemic_model(covid_country,case_type = "deaths", p = 0.08*.25,
+                        n_waves = nwaves, 
                         warmup = 10e3, thin = 3, sample_size = 1e3,
-                        init = init) # run the model
+                        init=init, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
   
@@ -45,7 +49,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   list_out <- list(df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
-                   mu_plot = stats$mu_plot, flag = 0)
+                   mu_plot = stats$mu_plot, flag=0)
   name.to.save <- gsub(" ", "-", country_name)
   
   ### saveRDS
