@@ -14,7 +14,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-c("Belgium", "Bolivia", "Colombia", "Costa Rica", "France",
+countrylist <- c("Belgium", "Bolivia", "Colombia", "Costa Rica", "France",
   "Germany", "Greece", "Guatemala", "Iraq", "Italy",
   "Korea, South", "Morocco", "Netherlands", "Panama", "Peru",
   "Poland", "Portugal", "Russia", "South Africa", "Spain",
