@@ -43,7 +43,15 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
     data <- data[-which(duplicated(data$date)),]
   }}
 
-  pop <- br_pop$pop[which(br_pop$uf == estado)]
+  while(any(data$new_cases <0)){
+    pos <- which(data$new_cases <0)
+    for(j in pos){
+      data$new_cases[j-1] = data$new_cases[j] + data$new_cases[j-1]
+      data$new_cases[j] = 0
+    }
+  }
+
+    pop <- br_pop$pop[which(br_pop$uf == estado)]
   names <- paste("Brazil",estado,sep="_")
   
   covid_state <- list(data=as.data.frame(data), name = names, population = pop)
