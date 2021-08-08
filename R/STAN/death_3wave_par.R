@@ -14,9 +14,8 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Argentina", "Canada", "Chile", "Ecuador", "Honduras",
-                 "India", "Ireland", "Mexico", "Saudi Arabia", "Ukraine",
-                 "US", "Venezuela") # 12
+countrylist <- c("Argentina", "Chile", "Ecuador", "Ethiopia", "Switzerland",
+                 "Venezuela") # 6
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -31,7 +30,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   nwaves = 3
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=c(1,200,400))
+         alpha=rep(0.01,nwaves), delta=round(seq(1,nrow(covid_country$data),length.out = nwaves+1),0)[-(nwaves+1)])
   )
   
   mod <- pandemic_model(covid_country,case_type = "deaths", p = 0.08*.25,

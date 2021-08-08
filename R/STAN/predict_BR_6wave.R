@@ -25,11 +25,11 @@ uf <- distinct(covid19,state)
 br_pop <- read.csv("../pop/pop_BR.csv")
 
 
-state_list <- c("AL", "CE", "PI") # 3
+state_list <- c("AP", "MS", "PR", "SC") # 4
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
-#registerDoMC(cores = 7)    # Alternativa Linux
+#registerDoMC(cores = 5)    # Alternativa Linux
 registerDoMC(cores = min(63,length(state_list)))    # Alternativa Linux
 
 obj <- foreach(s = 1:length(state_list)) %dopar% {
@@ -37,7 +37,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   estado <- state_list[s]
   data <- covid19 %>% filter(state== estado) %>% 
           select(date=date, cases=n, deaths=d, new_cases=n_new, new_deaths=d_new,-state)
-
+          
   #remove duplicated data
   {if(sum(duplicated(data$date)) > 0){
     data <- data[-which(duplicated(data$date)),]
@@ -56,7 +56,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   covid_state <- list(data=as.data.frame(data), name = names, population = pop)
 
-  nwaves = 2
+  nwaves = 6
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
          alpha=rep(0.01,nwaves), delta=round(seq(1,nrow(covid_state$data),length.out = nwaves+1),0)[-(nwaves+1)], 

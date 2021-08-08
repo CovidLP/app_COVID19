@@ -14,7 +14,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Guatemala") # 1
+countrylist <- c("Romania", "Turkey") # 2
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -26,13 +26,13 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   country_name <- countrylist[s]
   covid_country <- load_covid(country_name=country_name) # load data 
   
-  nwaves = 2
+  nwaves = 7
   init <- list(
     list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
          alpha=rep(0.01,nwaves), delta=round(seq(1,nrow(covid_country$data),length.out = nwaves+1),0)[-(nwaves+1)])
   )
   
-  mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,
+  mod <- pandemic_model(covid_country,case_type = "deaths", p = 0.08*.25,
                         n_waves = nwaves, 
                         warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=init, covidLPconfig = FALSE) # run the model
@@ -51,12 +51,11 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
                     mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), flag = 0)
   
-  
   name.to.save <- gsub(" ", "-", country_name)
   
   ### saveRDS
   results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"
   names(covid_country$data) <- c("date","n","d","n_new","d_new")
-  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[3],'.rds') 
   saveRDS(list_out, file=name.file)
 }

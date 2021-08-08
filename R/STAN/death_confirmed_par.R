@@ -13,7 +13,7 @@ library(doMC)
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
 
-countrylist <- c("China", "New Zealand") # 2
+countrylist <- c("New Zealand") # 1
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
