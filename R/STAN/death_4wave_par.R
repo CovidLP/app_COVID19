@@ -52,8 +52,9 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   names(stats$lt_summary) <- c("NTC25","NTC500","NTC975","high.dat.low","high.dat.med","high.dat.upper","end.dat.low",
                                "end.dat.med","end.dat.upper") 
   
-  list_out <- list(df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
-                   mu_plot = stats$mu_plot, flag=0)
+  list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
+                    mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), flag = 0)
+  
   name.to.save <- gsub(" ", "-", country_name)
   
   ### saveRDS

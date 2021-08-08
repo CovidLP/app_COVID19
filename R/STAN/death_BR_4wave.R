@@ -81,7 +81,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
-                    mu_plot = stats$mu_plot, flag=0)
+                    mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), flag = 0)
   
   ### saveRDS
   results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"
