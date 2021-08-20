@@ -59,4 +59,10 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   names(covid_country$data) <- c("date","n","d","n_new","d_new")
   name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
   saveRDS(list_out, file=name.file)
+  
+  ### saveChain
+  results_directory = "/home/marcosop/Covid/chains/"
+  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  saveRDS(mod, file=name.file)
+  
 }
