@@ -91,4 +91,9 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   results_directory = "/home/marcosop/TMP/STaux/"
   file_id <- paste0(state_list[s],'_posterior_predict_',colnames(covid_state$data)[2],'e')
   saveRDS(pred,file = paste0(results_directory,file_id,'.rds'))
+  
+  ### saveChain
+  results_directory = "/home/marcosop/Covid/chains/"
+  file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[2],'e')
+  saveRDS(mod, file=file_id)
 }
