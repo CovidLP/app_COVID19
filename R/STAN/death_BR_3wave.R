@@ -9,6 +9,8 @@ library(foreach)
 library(doMC)
 library(covid19br)
 library(dplyr)
+library(zoo)
+source("utils.R")
 
 Sys.setenv(LANGUAGE='en')
 rstan_options(auto_write = TRUE)
@@ -25,8 +27,7 @@ uf <- distinct(covid19,state)
 br_pop <- read.csv("../pop/pop_BR.csv")
 
 
-state_list <- c("AM", "MA", "MG", "MT", "PE",
-                "PR", "RN", "RS", "SP", "TO") # 10
+state_list <- c("AM","MA","MG","MT","PE","PR","RN","RS","SP","TO")
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -37,7 +38,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   estado <- state_list[s]
   data <- covid19 %>% filter(state== estado) %>% 
-          select(date=date, cases=n, deaths=d, new_cases=n_new, new_deaths=d_new,-state)
+    select(date=date, cases=n, deaths=d, new_cases=n_new, new_deaths=d_new,-state)
   
   #remove duplicated data
   {if(sum(duplicated(data$date)) > 0){
@@ -52,23 +53,24 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
     }
   }
   
-
+  
   pop <- br_pop$pop[which(br_pop$uf == estado)]
   names <- paste("Brazil",estado,sep="_")
   
   covid_state <- list(data=as.data.frame(data), name = names, population = pop)
-
+  names(covid_state$data) <- c("date","n","d","n_new","d_new")
+  
   nwaves = 3
-  init <- list(
-    list(a=rep(150,nwaves), b = rep(1,nwaves), c = rep(0.5,nwaves), 
-         alpha=rep(0.01,nwaves), delta=round(seq(1,nrow(covid_state$data),length.out = nwaves+1),0)[-(nwaves+1)], 
-         d_1=rep(1,nwaves), d_2=rep(1,nwaves),d_3=rep(1,nwaves))
-  )
+  
+  results_directory = "/home/marcosop/Covid/chains/"
+  file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[3],'e')
+  old <- readRDS(file_id)  
+  
   
   mod <- pandemic_model(covid_state,case_type = "deaths", p = 0.08*0.25,
                         seasonal_effect=c("sunday","monday"),n_waves = nwaves, 
                         warmup = 5e3, thin = 3, sample_size = 1e3,
-                        init=init, covidLPconfig = FALSE) # run the model
+                        init=old, covidLPconfig = FALSE) # run the model
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
   
@@ -81,13 +83,16 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   names(stats$lt_summary) <- c("NTC25","NTC500","NTC975","high.dat.low","high.dat.med","high.dat.upper","end.dat.low",
                                "end.dat.med","end.dat.upper") 
   
+  #create flag
+  flag <- classify.flag(covid_state$data$data[,c("date","d_new")],stats$mu_plot)
+  
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
-                    mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), flag = 0)
+                    mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), 
+                    flag = flag)
   
   
   ### saveRDS
   results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"
-  names(covid_state$data) <- c("date","n","d","n_new","d_new")
   file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[3],'e')
   saveRDS(list_out, file=paste0(results_directory,'Brazil_',file_id,'.rds'))
   
@@ -100,5 +105,6 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   ### saveChain
   results_directory = "/home/marcosop/Covid/chains/"
   file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[3],'e')
-  saveRDS(mod, file=file_id)
+  saveRDS(mod, file=paste0(results_directory,file_id,'.rds'))
+  
 }

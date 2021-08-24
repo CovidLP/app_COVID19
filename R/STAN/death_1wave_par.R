@@ -17,7 +17,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Honduras")
+countrylist <- c("New Zealand")
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux
@@ -30,14 +30,14 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   covid_country <- load_covid(country_name=country_name) # load data 
   names(covid_country$data) <- c("date","n","d","n_new","d_new")
   
-  nwaves = 4
+  nwaves = 1
   
   name.to.save <- gsub(" ", "-", country_name)
   results_directory = "/home/marcosop/Covid/chains/"
-  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[3],'.rds') 
   old <- readRDS(name.file)
 
-  mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,
+  mod <- pandemic_model(covid_country,case_type = "deaths", p = 0.08*.25,
                         n_waves = nwaves, 
                         warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=old, covidLPconfig = FALSE) # run the model
@@ -54,7 +54,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   #create flag
-  flag <- classify.flag(covid_country$data[,c("date","n_new")],stats$mu_plot)
+  flag <- classify.flag(covid_country$data[,c("date","d_new")],stats$mu_plot)
   
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
                     mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), 
@@ -64,11 +64,11 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   
   ### saveRDS
   results_directory = "/home/marcosop/Covid/app_COVID19/STpredictions/"
-  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[3],'.rds') 
   saveRDS(list_out, file=name.file)
   
   ### saveChain
   results_directory = "/home/marcosop/Covid/chains/"
-  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[3],'.rds') 
   saveRDS(mod, file=name.file)
 }
