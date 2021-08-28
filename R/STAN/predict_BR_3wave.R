@@ -57,18 +57,20 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   names <- paste("Brazil",estado,sep="_")
   
   covid_state <- list(data=as.data.frame(data), name = names, population = pop)
-  names(covid_state$data) <- c("date","n","d","n_new","d_new")
   
   nwaves = 3
   
+  nom <- c("date","n","d","n_new","d_new")
   results_directory = "/home/marcosop/Covid/chains/"
-  file_id <- paste0(state_list[s],'_',colnames(covid_state$data)[2],'e')
-  old <- readRDS(file_id)  
+  file_id <- paste0(state_list[s],'_',nom[2],'e')
+  old <- readRDS(paste0(results_directory,file_id,'.rds'))
   
   mod <- pandemic_model(covid_state,case_type = "confirmed", p = 0.08,
                         seasonal_effect=c("sunday","monday"),n_waves = nwaves, 
                         warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=old, covidLPconfig = FALSE) # run the model
+  
+  names(covid_state$data) <- nom
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
   
@@ -82,7 +84,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   #create flag
-  flag <- classify.flag(covid_state$data$data[,c("date","n_new")],stats$mu_plot)
+  flag <- classify.flag(covid_state$data[,c("date","n_new")],stats$mu_plot)
   
   list_out <- list( df_predict = stats$df_predict, lt_predict=stats$lt_predict, lt_summary=stats$lt_summary, 
                     mu_plot = stats$mu_plot, residuals = cbind(mod$nominal_errors, mod$relative_errors), 

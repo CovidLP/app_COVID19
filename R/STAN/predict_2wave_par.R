@@ -28,19 +28,21 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
   
   country_name <- countrylist[s]
   covid_country <- load_covid(country_name=country_name) # load data 
-  names(covid_country$data) <- c("date","n","d","n_new","d_new")
   
   nwaves = 2
   
+  nom <-  c("date","n","d","n_new","d_new")
   name.to.save <- gsub(" ", "-", country_name)
   results_directory = "/home/marcosop/Covid/chains/"
-  name.file <- paste0(results_directory,name.to.save,'_',colnames(covid_country$data)[2],'.rds') 
+  name.file <- paste0(results_directory,name.to.save,'_',nom[2],'.rds') 
   old <- readRDS(name.file)
 
   mod <- pandemic_model(covid_country,case_type = "confirmed", p = 0.08,
                         n_waves = nwaves, 
                         warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=old, covidLPconfig = FALSE) # run the model
+  
+  names(covid_country$data) <- nom
   
   pred <- posterior_predict(mod,horizonLong = 1000,horizonShort = 14) # do predictions
   
