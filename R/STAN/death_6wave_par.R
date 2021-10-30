@@ -17,7 +17,7 @@ rstan_options(auto_write = TRUE)
 ###################################################################
 ### Data sets: https://github.com/CSSEGISandData
 ###################################################################
-countrylist <- c("Indonesia","Italy","Japan","Korea, South","Netherlands","Portugal","Russia","South Africa","Spain","United Kingdom")
+countrylist <- c("Indonesia","Italy","Japan","South Korea","Netherlands","Portugal","Russia","South Africa","Spain","United Kingdom")
 
 #register cores
 #registerDoMC(cores = detectCores()-1)    # Alternativa Linux

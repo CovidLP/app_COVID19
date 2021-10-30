@@ -5,10 +5,10 @@ country_list <- list(
   wave2 = c("Australia", "Norway"),
   wave3 = c("Argentina", "Chile", "Ecuador", "Ethiopia", "Switzerland", "Venezuela"),
   wave4 = c("Belgium", "Bolivia", "Canada", "China", "Costa Rica", "Guatemala", "Honduras", 
-            "India", "Ireland", "Paraguay", "Poland", "Ukraine", "Uruguay", "US"),
+            "India", "Ireland", "Paraguay", "Poland", "Ukraine", "Uruguay", "United States of America"),
   wave5 = c("Colombia", "France", "Germany", "Greece", "Iraq", "Mexico", "Morocco", 
             "Panama", "Peru", "Saudi Arabia", "Sweden"),
-  wave6 = c("Indonesia", "Italy", "Japan", "Korea, South", "Netherlands", "Portugal", 
+  wave6 = c("Indonesia", "Italy", "Japan", "South Korea", "Netherlands", "Portugal", 
             "Russia", "South Africa", "Spain", "United Kingdom"),
   wave7 = c("Romania", "Turkey")
 )

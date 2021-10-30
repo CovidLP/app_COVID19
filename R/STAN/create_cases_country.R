@@ -10,7 +10,7 @@ country_list <- list(
             "Mexico", "Russia", "South Africa", "Sweden", "Turkey"),
   wave7 = c("Ethiopia", "Germany", "Greece", "Ireland", "Italy", "Netherlands", "Norway", 
             "Panama", "Poland", "Romania", "Switzerland", "United Kingdom", "Uruguay"),
-  wave8 = c("Japan","Korea, South", "Portugal", "Spain", "Ukraine", "US")
+  wave8 = c("Japan","South Korea", "Portugal", "Spain", "Ukraine", "United States of America")
 )
 
 template <- readLines("template_cases_countries.R")

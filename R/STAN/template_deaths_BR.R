@@ -69,7 +69,7 @@ obj <- foreach(s = 1:length(state_list)) %dopar% {
   
   mod <- pandemic_model(covid_state,case_type = "deaths", p = 0.08*0.25,
                         seasonal_effect=c("sunday","monday"),n_waves = nwaves, 
-                        warmup = 5e3, thin = 3, sample_size = 1e3,
+                        warmup = 10e3, thin = 3, sample_size = 1e3,
                         init=old, covidLPconfig = FALSE) # run the model
   
   names(covid_state$data) <- nom
