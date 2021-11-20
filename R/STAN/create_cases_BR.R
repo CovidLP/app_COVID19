@@ -1,14 +1,18 @@
-nwaves <- 2:6
+library("dplyr")
+library("PandemicLP")
+library("pracma")
 
-state_list <- list(
-  wave2 = c("AL", "CE", "PI"),
-  wave3 = c("MA", "PA"),
-  wave4 = c("AC", "AM", "DF", "GO", "MT","PB", "PE", "RN", "RO", "RR"),
-  wave5 = c("BA", "ES", "MG", "RJ", "RS", "SE", "SP", "TO"),
-  wave6 = c("AP", "MS", "PR", "SC")
-)
+setwd("/home/marcosop/Covid/R/STAN/")
+source("utils.R")
+
+out <- nwaves(country = FALSE)
+nwaves <- out$nwaves
+state_list <- out$state_list
 
 template <- readLines("template_cases_BR.R")
+
+files <- list.files(pattern="predict_BR_[1,2,3,4,5,6,7,8,9](.*?).R")
+file.remove(files)
 
 for(i in 1:length(nwaves)){
   

@@ -1,19 +1,18 @@
-nwaves <- 1:7
+library("dplyr")
+library("PandemicLP")
+library("pracma")
 
-country_list <- list(
-  wave1 = c("New Zealand"),
-  wave2 = c("Australia", "Norway"),
-  wave3 = c("Argentina", "Chile", "Ecuador", "Ethiopia", "Switzerland", "Venezuela"),
-  wave4 = c("Belgium", "Bolivia", "Canada", "China", "Costa Rica", "Guatemala", "Honduras", 
-            "India", "Ireland", "Paraguay", "Poland", "Ukraine", "Uruguay", "United States of America"),
-  wave5 = c("Colombia", "France", "Germany", "Greece", "Iraq", "Mexico", "Morocco", 
-            "Panama", "Peru", "Saudi Arabia", "Sweden"),
-  wave6 = c("Indonesia", "Italy", "Japan", "South Korea", "Netherlands", "Portugal", 
-            "Russia", "South Africa", "Spain", "United Kingdom"),
-  wave7 = c("Romania", "Turkey")
-)
+setwd("/home/marcosop/Covid/R/STAN/")
+source("utils.R")
+
+out <- nwaves(new_cases = FALSE)
+nwaves <- out$nwaves
+country_list <- out$country_list 
 
 template <- readLines("template_deaths_countries.R")
+
+files <- list.files(pattern="death_[1,2,3,4,5,6,7,8,9](.*?).R")
+file.remove(files)
 
 for(i in 1:length(nwaves)){
   

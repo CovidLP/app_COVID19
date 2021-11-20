@@ -1,19 +1,18 @@
-nwaves <- 2:8
+library("dplyr")
+library("PandemicLP")
+library("pracma")
 
-country_list <- list(
-  wave2 = c("Guatemala"),
-  wave3 = c("China", "Ecuador", "New Zealand", "Venezuela"),
-  wave4 = c("Honduras"),
-  wave5 = c("Australia", "Bolivia", "Costa Rica", "India", "Iraq", "Morocco", "Paraguay", 
-            "Peru", "Saudi Arabia"),
-  wave6 = c("Argentina", "Belgium", "Canada", "Chile", "Colombia", "France", "Indonesia", 
-            "Mexico", "Russia", "South Africa", "Sweden", "Turkey"),
-  wave7 = c("Ethiopia", "Germany", "Greece", "Ireland", "Italy", "Netherlands", "Norway", 
-            "Panama", "Poland", "Romania", "Switzerland", "United Kingdom", "Uruguay"),
-  wave8 = c("Japan","South Korea", "Portugal", "Spain", "Ukraine", "United States of America")
-)
+setwd("/home/marcosop/Covid/R/STAN/")
+source("utils.R")
+
+out <- nwaves()
+nwaves <- out$nwaves
+country_list <- out$country_list 
 
 template <- readLines("template_cases_countries.R")
+
+files <- list.files(pattern="predict_[1,2,3,4,5,6,7,8,9](.*?).R")
+file.remove(files)
 
 for(i in 1:length(nwaves)){
   
@@ -25,5 +24,3 @@ for(i in 1:length(nwaves)){
   write(code,file=file.name)
   cat("File ", paste0(getwd(),"/",file.name), "written.\n")
 }
-
-
