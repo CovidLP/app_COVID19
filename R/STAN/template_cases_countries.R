@@ -56,7 +56,7 @@ obj <- foreach(s = 1:length(countrylist)) %dopar% {
                                "end.dat.med","end.dat.upper") 
   
   #create flag
-  flag <- try(classify.flag(covid_country$data[,c("date","d_new")],stats$mu_plot))
+  flag <- try(classify.flag(covid_country$data[,c("date","n_new")],stats$mu_plot))
   
   if(class(flag)== "try-error") flag <- -1
   
